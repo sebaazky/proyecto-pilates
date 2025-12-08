@@ -1,0 +1,145 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+
+{% block encabezado %}Administrar Clases – Calendario{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+
+<style>
+  .cal-shell{max-width:1280px;margin:0 auto;padding:8px 6px 24px;position:relative;}
+  .glass-card{backdrop-filter:blur(8px) saturate(130%);background:rgba(255,255,255,.75);
+    border:1px solid rgba(120,144,180,.20);border-radius:18px;box-shadow:0 12px 36px rgba(15,23,42,.12);}
+  .cal-head{border-radius:18px;padding:18px;background:linear-gradient(100deg,#4f46e5 0%,#2563eb 45%,#0ea5e9 100%);
+    color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 10px 30px rgba(37,99,235,.35);}
+  .filters-wrap{margin-top:12px;padding:14px;border-radius:16px;background:linear-gradient(180deg,rgba(79,70,229,.10),rgba(14,165,233,.08));
+    border:1px solid rgba(120,144,180,.22);}
+  .btn-grad{background:linear-gradient(90deg,#4f46e5,#0ea5e9);color:#fff;border:0;box-shadow:0 6px 18px rgba(37,99,235,.28);}
+  .btn-grad:hover{filter:brightness(.98);}
+  .fc{--fc-border-color:rgba(107,114,128,.25);}
+  .fc .fc-toolbar-title{font-weight:800;background:linear-gradient(90deg,#0ea5e9,#4f46e5);
+    -webkit-background-clip:text;color:transparent;}
+  .fc .fc-button{border-radius:10px!important;background:linear-gradient(90deg,#6366f1,#22c1c3)!important;
+    border:1px solid rgba(99,102,241,.36);color:#fff!important;}
+  .fc .fc-button:hover{filter:brightness(.97);}
+  .fc .fc-event{border-radius:10px;border:0!important;padding:2px 6px;
+    background:linear-gradient(90deg,#22c55e,#10b981)!important;color:#fff!important;}
+</style>
+
+<div class="cal-shell">
+  <div class="cal-head">
+    <h2 class="h4 mb-0 fw-bold text-white">Calendario de Clases</h2>
+    <a href="{% url 'administrador:crear_clase' %}" class="btn btn-light fw-semibold">
+      <i class="bi bi-plus-lg me-1"></i> Crear clase
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-wrap glass-card mt-3">
+    <div class="row g-2 align-items-center">
+      <div class="col-12 col-lg-4">
+        <input id="fcInstructor" class="form-control" placeholder="Filtrar por instructor…">
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+          <input id="fcStart" type="date" class="form-control">
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+          <input id="fcEnd" type="date" class="form-control">
+        </div>
+      </div>
+      <div class="col-12 col-lg-2 d-grid">
+        <button id="fcApply" type="button" class="btn btn-grad">
+          <i class="bi bi-funnel me-1"></i> Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-card mt-3 p-3">
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script>
+(function(){
+  const $instr = document.getElementById('fcInstructor');
+  const $start = document.getElementById('fcStart');
+  const $end   = document.getElementById('fcEnd');
+  const $apply = document.getElementById('fcApply');
+
+  // Fechas iniciales
+  const today = new Date();
+  const plus30 = new Date(); plus30.setDate(today.getDate()+30);
+  if(!$start.value) $start.value = today.toISOString().split('T')[0];
+  if(!$end.value)   $end.value   = plus30.toISOString().split('T')[0];
+
+  // Normalizar dd-mm-aaaa -> aaaa-mm-dd si el navegador devuelve ese formato visual
+  function toISO(v){
+    if(!v) return v;
+    if(/^\d{2}-\d{2}-\d{4}$/.test(v)){ const [dd,mm,yyyy]=v.split('-'); return `${yyyy}-${mm}-${dd}`; }
+    return v;
+  }
+
+  const calendarEl = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    locale: 'es',
+    height: 'auto',
+    initialView: 'timeGridWeek',
+    firstDay: 1,
+    nowIndicator: true,
+    slotMinTime: '06:30:00',
+    slotMaxTime: '22:15:00',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'timeGridDay,timeGridWeek,dayGridMonth,listWeek'
+    },
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+
+    // parámetros que espera la API: desde, hasta, instructor
+    events: function(info, success, failure){
+      const sISO = toISO($start.value);
+      const eISO = toISO($end.value);
+      const q    = ($instr.value || '').trim();
+
+      const url = new URL("{% url 'administrador:api_clases' %}", window.location.origin);
+      if(sISO) url.searchParams.set('desde', sISO);
+      if(eISO) url.searchParams.set('hasta', eISO);
+      if(q)    url.searchParams.set('instructor', q);
+      url.searchParams.set('_ts', Date.now()); // anti-cache
+
+      fetch(url)
+        .then(r => { if(!r.ok) throw new Error('Error al cargar clases'); return r.json(); })
+        .then(data => success(data))
+        .catch(err => { console.error(err); failure(err); });
+    },
+
+    eventClick: function(info){
+      const u = info.event.extendedProps && info.event.extendedProps.edit_url;
+      if(u) window.location.href = u;
+    }
+  });
+
+  window.calendar = calendar;
+  calendar.render();
+
+  function applyFilters(){
+    if($start.value) calendar.gotoDate(toISO($start.value));
+    calendar.refetchEvents();
+  }
+
+  $apply.addEventListener('click', e => { e.preventDefault(); applyFilters(); });
+  [$start, $end, $instr].forEach(el => {
+    el.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); applyFilters(); } });
+  });
+})();
+</script>
+
+{% endblock %}

@@ -116,7 +116,7 @@ AUTHENTICATION_BACKENDS = [
 # ─────────────────────────────
 # Login / Logout redirects
 # ─────────────────────────────
-LOGIN_URL = "login"
+LOGIN_URL = "login:login"  # <-- único cambio (antes: "login")
 LOGIN_REDIRECT_URL = "usuarios:home_cliente"
 LOGOUT_REDIRECT_URL = "index:index"
 
@@ -168,3 +168,7 @@ CHATBOT_CLASS_TYPES = ["Mat", "Reformer", "Full Power", "Grupales"]
 
 # (opcional) Link directo a Google Maps para que el bot lo ofrezca
 CHATBOT_MAP_URL = "https://maps.app.goo.gl/Ytz1CZTw9wGq4Jwh7"
+
+# === MEDIA (uploads) ===
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

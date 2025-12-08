@@ -1,0 +1,64 @@
+{% extends "administrador/base_admin.html" %}
+{% block title %}Crear novedad{% endblock %}
+{% block encabezado %}Novedades{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:900px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0 fw-bold">{% if form.instance.pk %}Editar novedad{% else %}Crear novedad{% endif %}</h3>
+  </div>
+
+  <div class="card p-4 rounded-4 border-0 shadow-sm">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.title.id_for_label }}">Título</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.tag.id_for_label }}">Tag</label>
+        {{ form.tag }}
+        {{ form.tag.errors }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.image.id_for_label }}">Imagen</label>
+        {{ form.image }}
+        {{ form.image.errors }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.excerpt.id_for_label }}">Resumen</label>
+        {{ form.excerpt }}
+        {{ form.excerpt.errors }}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="{{ form.body.id_for_label }}">Contenido</label>
+        {{ form.body }}
+        {{ form.body.errors }}
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-auto form-check">
+          {{ form.published }}
+          <label class="form-check-label" for="{{ form.published.id_for_label }}">Publicar ahora</label>
+        </div>
+        <div class="col-auto form-check">
+          {{ form.featured }}
+          <label class="form-check-label" for="{{ form.featured.id_for_label }}">Destacado</label>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'index:panel_news_list' %}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

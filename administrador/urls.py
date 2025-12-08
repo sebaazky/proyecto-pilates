@@ -2,6 +2,7 @@
 from django.urls import path, include   # <-- añadimos include
 from . import views
 from . import views_perfiles
+from index import panel_news_views as pnl
 
 app_name = "administrador"
 
@@ -19,6 +20,12 @@ urlpatterns = [
          views.modificar_clase, name="modificar_clase"),
     path("clases/<int:clase_id>/eliminar/",
          views.eliminar_clase, name="eliminar_clase"),
+
+    # >>> Añadidos para Calendario y API <<<
+    path("clases/calendario/", views.clases_calendario, name="clases_calendario"),
+    path("api/clases/", views.api_clases, name="api_clases"),
+    path("api/clases/<int:pk>/move/", views.api_clase_move, name="api_clase_move"),
+    # >>> Fin añadidos <<<
 
     # Reservas (panel)
     path("reservas/", views.reservas_admin_list, name="reservas_list"),
@@ -43,11 +50,20 @@ urlpatterns = [
     path("horarios/generar-clases/", views.horarios_generar_clases,
          name="horarios_generar_clases"),
 
-    # Perfiles (CRUD)  <-- NUEVO: incluye las rutas del módulo de perfiles
+    # Perfiles (CRUD)
     path("perfiles/", include("administrador.urls_perfiles")),
     path("perfiles/<int:user_id>/reservas/",
          views_perfiles.perfil_reservas, name="perfil_reservas"),
-    path("perfiles/<int:user_id>/reservas/",
-         views_perfiles.perfil_reservas, name="perfil_reservas"),
+
     path("crm/", views.crm_contactos, name="crm_contactos"),
+
+    # === Novedades (panel) ===
+    path("novedades/", pnl.news_list, name="news_list"),
+    path("novedades/nueva/", pnl.news_create, name="news_new"),
+    path("novedades/<int:pk>/editar/", pnl.news_edit, name="news_edit"),
+    path("novedades/<int:pk>/eliminar/", pnl.news_delete, name="news_delete"),
+    path("novedades/<int:pk>/publicar/",
+         pnl.news_toggle_publish, name="news_pub"),
+    path("novedades/<int:pk>/destacar/",
+         pnl.news_toggle_featured, name="news_feat"),
 ]

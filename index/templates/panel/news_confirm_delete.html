@@ -1,0 +1,18 @@
+{% extends "administrador/base_admin.html" %}
+{% block titulo %}Eliminar novedad{% endblock %}
+{% block encabezado %}Eliminar novedad{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:800px">
+  <div class="card p-4 rounded-4 border-0 shadow-sm">
+    <h4 class="fw-bold">¿Eliminar esta novedad?</h4>
+    <p class="mb-4 text-muted">“{{ object.title }}”</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-danger">Eliminar</button>
+      <a class="btn btn-outline-secondary ms-2" href="{% url 'index:panel_news_list' %}">Cancelar</a>
+    </form>
+  </div>
+</section>
+{% endblock %}

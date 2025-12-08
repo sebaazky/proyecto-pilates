@@ -1,14 +1,16 @@
 # administrador/views.py
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from datetime import timedelta, date
+# <- time necesario para utilidades
+from datetime import datetime, timedelta, date, time
 
+# Si tu Contacto está en index.models mantenemos este import como lo tenías
 from index.models import Contacto
 
 from .forms import (
@@ -20,7 +22,7 @@ from .forms import (
     GenerarClasesForm,
     ContactoAdminForm,
 )
-from .models import ClasePilates, HorarioBloque  # <- modelo de horarios
+from .models import ClasePilates, HorarioBloque
 
 User = get_user_model()
 
@@ -80,7 +82,6 @@ def admin_home(request):
         contactos_pendientes = contactos_qs.filter(
             estado__iexact="pendiente").count()
     else:
-        # MVP: si no hay campo de estado, mostramos el total como pendientes
         contactos_pendientes = contactos_qs.count()
 
     # ---- Reservas de HOY ----
@@ -89,7 +90,11 @@ def admin_home(request):
     if _has_field(ReservaModel, "fecha"):
         reservas_hoy = reservas_qs.filter(fecha=hoy).count()
     elif _has_field(ReservaModel, "fecha_reserva"):
-        reservas_hoy = reservas_qs.filter(fecha_reserva=hoy).count()
+        # por si es DateTimeField
+        try:
+            reservas_hoy = reservas_qs.filter(fecha_reserva__date=hoy).count()
+        except Exception:
+            reservas_hoy = reservas_qs.filter(fecha_reserva=hoy).count()
     elif _has_field(ReservaModel, "clase") and _has_field(ClasePilates, "fecha"):
         try:
             reservas_hoy = reservas_qs.select_related("clase").filter(
@@ -711,3 +716,174 @@ def crm_contactos(request):
         qs = qs.order_by("-id")
 
     return render(request, "administrador/crm_contactos.html", {"contactos": qs})
+
+
+# ============================================================
+# =============== CALENDARIO & API ===========================
+# ============================================================
+
+# Paleta de colores determinística por instructor (para eventos)
+PALETA = [
+    "#4F46E5", "#06B6D4", "#22C55E", "#F59E0B",
+    "#EC4899", "#8B5CF6", "#10B981", "#3B82F6",
+]
+
+
+def _color_por_instructor(nombre: str) -> str:
+    if not nombre:
+        return "#4F46E5"
+    idx = sum(ord(c) for c in nombre) % len(PALETA)
+    return PALETA[idx]
+
+
+def _combinar_dt(fecha_value, time_value):
+    """
+    Devuelve datetime aware a partir de DateField + TimeField.
+    Usa timezone.make_aware (compatible con ZoneInfo, Django 4/5).
+    """
+    if not fecha_value or not time_value:
+        raise ValueError("Fecha u hora inválida")
+
+    naive = datetime.combine(fecha_value, time_value)
+    if timezone.is_naive(naive):
+        return timezone.make_aware(naive, timezone.get_current_timezone())
+    return naive.astimezone(timezone.get_current_timezone())
+
+
+# ---------- Vista HTML Calendario ----------
+@login_required
+def clases_calendario(request):
+    if (resp := _forbidden_if_not_admin(request)) is not None:
+        return resp
+    return render(request, "administrador/clases_calendario.html")
+
+
+# ---------- API JSON para FullCalendar ----------
+@login_required
+def api_clases(request):
+    """
+    Devuelve eventos para FullCalendar.
+    Acepta parámetros:
+      - start / end (YYYY-MM-DD)  ← los que envía tu template actual
+      - desde / hasta             ← compatibilidad hacia atrás
+      - q (texto) o instructor    ← filtro por instructor
+    """
+    if (resp := _forbidden_if_not_admin(request)) is not None:
+        return resp
+    if request.method != "GET":
+        return HttpResponseBadRequest("Método no permitido")
+
+    # Lee ambos nombres de parámetros (compatibilidad)
+    start_param = request.GET.get("start") or request.GET.get("desde")
+    end_param = request.GET.get("end") or request.GET.get("hasta")
+    q_inst = request.GET.get("q") or request.GET.get("instructor")
+
+    def _parse_date(s):
+        if not s:
+            return None
+        s = s.strip()
+        for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+            try:
+                return datetime.strptime(s, fmt).date()
+            except Exception:
+                pass
+        return None
+
+    d_ini = _parse_date(start_param)
+    d_fin = _parse_date(end_param)
+
+    qs = ClasePilates.objects.all()
+    if d_ini:
+        qs = qs.filter(fecha__gte=d_ini)
+    if d_fin:
+        qs = qs.filter(fecha__lte=d_fin)
+    if q_inst:
+        qs = qs.filter(nombre_instructor__icontains=q_inst)
+
+    # Determinar nombre del campo de hora
+    time_field = "horario" if _has_field(ClasePilates, "horario") else (
+        "hora" if _has_field(ClasePilates, "hora") else None)
+
+    eventos = []
+    for c in qs:
+        if not time_field:
+            continue
+        tvalue = getattr(c, time_field, None)
+        if not tvalue:
+            continue
+
+        try:
+            inicio = _combinar_dt(c.fecha, tvalue)
+        except Exception:
+            continue
+        fin = inicio + timedelta(minutes=50)
+        color = _color_por_instructor(c.nombre_instructor or "")
+
+        titulo = (
+            getattr(c, "nombre_clase", None)
+            or getattr(c, "nombre", None)
+            or getattr(c, "titulo", None)
+            or f"Clase #{c.id}"
+        )
+
+        eventos.append({
+            "id": c.id,
+            "title": f"{titulo}",
+            "start": inicio.isoformat(),
+            "end": fin.isoformat(),
+            "backgroundColor": color,
+            "borderColor": color,
+            "extendedProps": {
+                "instructor": c.nombre_instructor or "",
+                "capacidad": getattr(c, "capacidad_maxima", None),
+                "edit_url": f"/administrador/clases/{c.id}/editar/",
+            },
+        })
+
+    return JsonResponse(eventos, safe=False)
+
+
+@login_required
+def api_clase_move(request, pk: int):
+    """
+    Drag & drop para reprogramar una clase:
+      body JSON: {"start": "YYYY-MM-DDTHH:MM:SS"}
+    Actualiza fecha y el campo horario/hora.
+    """
+    if (resp := _forbidden_if_not_admin(request)) is not None:
+        return resp
+    if request.method != "POST":
+        return HttpResponseBadRequest("Método no permitido")
+
+    import json
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+        start_iso = payload.get("start")
+        if not start_iso:
+            return HttpResponseBadRequest("Falta 'start'")
+        new_start = datetime.fromisoformat(start_iso)
+        if timezone.is_naive(new_start):
+            new_start = timezone.make_aware(
+                new_start, timezone.get_current_timezone())
+        else:
+            new_start = new_start.astimezone(timezone.get_current_timezone())
+    except Exception as e:
+        return HttpResponseBadRequest(f"JSON inválido: {e}")
+
+    clase = get_object_or_404(ClasePilates, pk=pk)
+
+    # Campo de hora a actualizar
+    time_field = "horario" if _has_field(ClasePilates, "horario") else (
+        "hora" if _has_field(ClasePilates, "hora") else None)
+    if not time_field:
+        return HttpResponseBadRequest("El modelo no tiene campo de hora ('horario' o 'hora').")
+
+    try:
+        setattr(clase, "fecha", new_start.date())
+        setattr(clase, time_field, new_start.time().replace(
+            second=0, microsecond=0))
+        clase.save(update_fields=["fecha", time_field])
+    except Exception as e:
+        return HttpResponseBadRequest(f"No se pudo actualizar: {e}")
+
+    return JsonResponse({"ok": True})

@@ -2,6 +2,7 @@
 from django.conf import settings
 from django.db import models
 from administrador.models import ClasePilates  # <-- importamos la clase admin
+from django.utils.text import slugify
 
 
 class Reserva(models.Model):
@@ -89,3 +90,40 @@ class Contacto(models.Model):
 
     def __str__(self):
         return f"{self.nombre} - {self.correo}"
+
+
+class NewsPost(models.Model):
+    TAGS = [
+        ("Consejos", "Consejo"),
+        ("Eventos",  "Evento"),
+        ("Promos",   "Promo"),
+        ("MK",       "MK · Historia"),
+    ]
+
+    title = models.CharField(max_length=160)
+    slug = models.SlugField(max_length=180, unique=True, blank=True)
+    tag = models.CharField(max_length=16, choices=TAGS, default="Consejos")
+    excerpt = models.TextField(max_length=300, blank=True)
+    body = models.TextField(blank=True)
+    image = models.ImageField(upload_to="news/", blank=True, null=True)
+    published = models.BooleanField(default=True)
+    featured = models.BooleanField(default=False)
+    published_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-featured", "-published_at"]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)[:170]
+            slug = base
+            i = 2
+            while NewsPost.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{i}"[:180]
+                i += 1
+            self.slug = slug
+        super().save(*args, **kwargs)

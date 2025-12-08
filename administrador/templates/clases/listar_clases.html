@@ -5,6 +5,7 @@
 
 {% block content %}
 {% url 'administrador:crear_clase' as url_crear %}
+{% url 'administrador:clases_calendario' as url_calendario %}
 
 <!-- ====== PALETA / UTILIDADES (sin texto de debug) ====== -->
 <style>
@@ -45,6 +46,10 @@
       <a href="{{ url_crear|default:'#' }}" class="btn btn-light text-primary fw-semibold {% if not url_crear %}disabled{% endif %}">
         <i class="bi bi-plus-lg me-1"></i> Crear clase
       </a>
+      <!-- NUEVO: botón al calendario -->
+      <a href="{{ url_calendario|default:'#' }}" class="btn btn-outline-light">
+        <i class="bi bi-calendar3 me-1"></i> Ver calendario
+      </a>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
           <i class="bi bi-download me-1"></i> Exportar
@@ -71,7 +76,9 @@
       </form>
     </div>
     <div class="col-12 col-lg-4 d-flex justify-content-lg-end gap-2">
-      <a href="#" class="btn btn-outline-secondary"><i class="bi bi-calendar3 me-1"></i> Vista calendario</a>
+      <a href="{{ url_calendario|default:'#' }}" class="btn btn-outline-secondary">
+        <i class="bi bi-calendar3 me-1"></i> Vista calendario
+      </a>
       <a href="." class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i> Limpiar</a>
     </div>
   </div>
@@ -154,4 +161,3 @@
   </div>
 {% endif %}
 {% endblock %}
-

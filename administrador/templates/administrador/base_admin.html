@@ -277,6 +277,15 @@
           </a>
         </li>
 
+        <!-- NUEVO: Calendario de Clases -->
+        <li class="nav-item">
+          <a class="nav-link {% if current_name == 'clases_calendario' %}active{% endif %}"
+             href="{% url 'administrador:clases_calendario' %}">
+            <i class="bi bi-calendar3"></i><span class="label">Calendario de Clases</span>
+          </a>
+        </li>
+        <!-- /NUEVO -->
+
         <li class="nav-item">
           <a class="nav-link {% if current_name == 'horarios_list' %}active{% endif %}"
              href="{% url 'administrador:horarios_list' %}">
@@ -295,6 +304,14 @@
           <a class="nav-link {% if current_name == 'reservas_list' %}active{% endif %}"
              href="{% url 'administrador:reservas_list' %}">
             <i class="bi bi-calendar-check"></i><span class="label">Reservas</span>
+          </a>
+        </li>
+
+        <!-- NUEVO: Novedades -->
+        <li class="nav-item">
+          <a class="nav-link {% if current_name and 'panel_news' in current_name %}active{% endif %}"
+             href="{% url 'administrador:news_list' %}">
+            <i class="bi bi-megaphone-fill"></i><span class="label">Novedades</span>
           </a>
         </li>
 
@@ -409,3 +426,4 @@
 </script>
 </body>
 </html>
+

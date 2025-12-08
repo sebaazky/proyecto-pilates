@@ -5,9 +5,10 @@ from django.core.paginator import Paginator
 from django.utils.timezone import now
 from django.contrib import messages
 
-from .forms import ContactoPublicoForm
 from administrador.models import ClasePilates
+from .forms import ContactoPublicoForm
 from .models import Contacto  # Modelo de contactos (lo usa el form)
+from .models import NewsPost
 
 # Detecta automáticamente el modelo de reservas disponible
 USE_INDEX_RESERVA = False
@@ -53,7 +54,6 @@ def contacto_publico(request):
                 request,
                 "Tu mensaje fue enviado con éxito. ¡Gracias por contactarnos!",
             )
-            # Usa namespace para evitar conflictos
             return redirect("index:contacto_exito")
         else:
             messages.error(request, "Revisa los campos del formulario.")
@@ -119,7 +119,7 @@ def clases_grid(request):
         qs = qs.filter(
             Q(nombre_clase__icontains=q)
             | Q(descripcion__icontains=q)
-            | Q(nombre_instructor__icontains=q)
+            | Q(nombre_instructor__icontains=q)   # <- corregido
         )
 
     reservado = ReservaModel.objects.values(
@@ -148,25 +148,47 @@ def faqs(request):
     return render(request, "index/faqs.html")
 
 
+# -------- Novedades (público) --------
 def novedades(request):
-    posts = [
+    """
+    Público: HERO = primera novedad Publicada + Destacada.
+    El resto se lista en 'posts'. Si no hay destacadas, no hay HERO
+    y se listan todas las publicadas.
+    """
+    qs_all = NewsPost.objects.filter(published=True).order_by(
+        "-featured", "-published_at", "-updated_at", "-id"
+    )
+
+    hero = qs_all.filter(featured=True).first()  # sin forzar tag
+    posts = qs_all.exclude(pk=hero.pk) if hero else qs_all
+
+    return render(
+        request,
+        "index/novedades.html",
         {
-            "title": "Nueva clase Reformer Intermedio",
-            "excerpt": "Agregamos horario martes y jueves 19:30. Cupos limitados.",
-            "tag": "Eventos",
-            "date": "2025-09-01",
+            "posts": posts,
+            "is_panel": False,
+            "hero": hero,
         },
-        {
-            "title": "Cómo activar el core en 3 pasos",
-            "excerpt": "Mini-guía práctica para sentir el trabajo sin sobrecargar cuello ni zona lumbar.",
-            "tag": "Consejos",
-            "date": "2025-08-26",
-        },
-        {
-            "title": "Promo de Primavera",
-            "excerpt": "Plan Mat 2x/semana con 15% OFF durante septiembre.",
-            "tag": "Promos",
-            "date": "2025-09-10",
-        },
-    ]
-    return render(request, "index/novedades.html", {"posts": posts})
+    )
+
+
+# -------- (opcional/legacy) feed directo --------
+def news_public_feed(request):
+    """
+    Versión simple/legacy: muestra todo publicado sin hero separado.
+    La plantilla es la misma por compatibilidad.
+    """
+    posts = (
+        NewsPost.objects.filter(published=True)
+        .order_by("-published_at", "-updated_at", "-id")
+    )
+    return render(
+        request,
+        "index/novedades.html",
+        {"posts": posts, "hero": None, "is_panel": False},
+    )
+
+
+def nosotros(request):
+    return render(request, "index/nosotros.html")
