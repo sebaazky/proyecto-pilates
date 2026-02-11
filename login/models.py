@@ -3,9 +3,19 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """
+    Usuario personalizado del sistema.
+    Solo permite usuarios administradores para gestionar el CMS.
+    """
     ROLES = [
-        ("cliente", "Cliente"),
-        ("administrador", "Administrador"),
+        ("administrador", "Administrador"),  # ✅ Solo este rol
     ]
-    # Default evita errores al crear usuarios/superusuarios sin definir rol explícito
-    rol = models.CharField(max_length=20, choices=ROLES, default="cliente")
+
+    rol = models.CharField(
+        max_length=20,
+        choices=ROLES,
+        default="administrador",  # ✅ Default cambiado
+        verbose_name="Rol",
+        help_text="Rol del usuario en el sistema"
+    )
+    ...
