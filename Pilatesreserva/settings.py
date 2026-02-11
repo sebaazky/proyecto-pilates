@@ -20,10 +20,10 @@ INSTALLED_APPS = [
 
     # Terceros
     "crispy_forms",
+    "crispy_bootstrap5",
 
     # Apps del proyecto
     "administrador",
-    "usuarios",
     "index",
     "login",
 ]
@@ -116,39 +116,31 @@ AUTHENTICATION_BACKENDS = [
 # ─────────────────────────────
 # Login / Logout redirects
 # ─────────────────────────────
-LOGIN_URL = "login:login"  # <-- único cambio (antes: "login")
-LOGIN_REDIRECT_URL = "usuarios:home_cliente"
+LOGIN_URL = "login:login"
+LOGIN_REDIRECT_URL = "index:index"  # ✅ Cambiado de usuarios:home_cliente
 LOGOUT_REDIRECT_URL = "index:index"
 
 # ─────────────────────────────
 # Crispy Forms
 # ─────────────────────────────
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # ─────────────────────────────
 # Email (Reset password)
 # ─────────────────────────────
 
 # 🔹 En desarrollo: manda los emails a la consola
-# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# 🔹 Opción 1: Gmail (requiere App Password de Google)
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "tu_correo@gmail.com"         # 👉 reemplazar
-EMAIL_HOST_PASSWORD = "TU_APP_PASSWORD"         # 👉 contraseña de aplicación
-DEFAULT_FROM_EMAIL = "PilatesReserva <tu_correo@gmail.com>"
-
-# 🔹 Opción 2: Outlook/Office 365 (comentando Gmail arriba y activando este bloque)
+# 🔹 Para producción: descomentar y configurar Gmail/Outlook
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.office365.com"
+# EMAIL_HOST = "smtp.gmail.com"
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "tu_correo@outlook.com"     # 👉 reemplazar
-# EMAIL_HOST_PASSWORD = "TU_PASSWORD"           # 👉 contraseña (o App Password)
-# DEFAULT_FROM_EMAIL = "PilatesReserva <tu_correo@outlook.com>"
+# EMAIL_HOST_USER = "tu_correo@gmail.com"
+# EMAIL_HOST_PASSWORD = "TU_APP_PASSWORD"
+# DEFAULT_FROM_EMAIL = "PilatesReserva <tu_correo@gmail.com>"
 
 # Timeout para conexión SMTP
 EMAIL_TIMEOUT = 30
@@ -156,19 +148,8 @@ EMAIL_TIMEOUT = 30
 # Link de reseteo válido por 24 horas
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 
-# --- Chatbot (config editable sin tocar el código del bot) ---
-CHATBOT_ADDRESS = "Av. Consistorial 2810, Peñalolen, Santiago, Chile"
-CHATBOT_PHONE = "+56 9 1234 5678"
-CHATBOT_PRICES = (
-    "Plan 4 clases: $X / mes · Plan 8 clases: $Y / mes · "
-    "Clase suelta: $Z. Escríbenos para promociones."
-)
-# Tipos de clases (opcional, el bot también puede leer desde la BD)
-CHATBOT_CLASS_TYPES = ["Mat", "Reformer", "Full Power", "Grupales"]
-
-# (opcional) Link directo a Google Maps para que el bot lo ofrezca
-CHATBOT_MAP_URL = "https://maps.app.goo.gl/Ytz1CZTw9wGq4Jwh7"
-
-# === MEDIA (uploads) ===
+# ─────────────────────────────
+# MEDIA (uploads)
+# ─────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
