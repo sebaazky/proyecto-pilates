@@ -1,120 +1,161 @@
-# administrador/models.py
 from django.db import models
-from django.conf import settings
+from django.utils import timezone
 
 
-class PerfilUsuario(models.Model):
-    usuario = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='perfil'
+class Service(models.Model):
+    """
+    Modelo para gestionar los servicios ofrecidos por el centro de Pilates.
+    Estos servicios se muestran dinámicamente en la landing page.
+    """
+    name = models.CharField(
+        max_length=200,
+        verbose_name="Nombre del servicio",
+        help_text="Ej: Clases de Pilates, Kinesiología"
     )
-    primer_nombre = models.CharField(max_length=100)
-    apellido_paterno = models.CharField(max_length=100)
-    apellido_materno = models.CharField(max_length=100, blank=True, null=True)
-    rut = models.CharField(max_length=12, unique=True)
-    direccion = models.CharField(max_length=255)
-    telefono = models.CharField(max_length=15)
-
-    def __str__(self):
-        return f"{self.usuario.username} ({getattr(self.usuario, 'rol', 'sin-rol')})"
-
-
-class ClasePilates(models.Model):
-    nombre_clase = models.CharField(max_length=100)
-    fecha = models.DateField()
-    horario = models.TimeField()
-    capacidad_maxima = models.PositiveIntegerField()
-    nombre_instructor = models.CharField(max_length=100)
-    descripcion = models.TextField()
-
-    class Meta:
-        ordering = ["-fecha", "horario"]
-
-    def __str__(self):
-        return f'{self.nombre_clase} - {self.fecha} {self.horario}'
-
-
-class ReservaClase(models.Model):
-    # related_name único para evitar conflictos
-    cliente = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='reservas_clase',
-        related_query_name='reserva_clase'
+    description = models.TextField(
+        verbose_name="Descripción",
+        help_text="Descripción completa del servicio"
     )
-    clase = models.ForeignKey(ClasePilates, on_delete=models.CASCADE)
-    fecha_reserva = models.DateTimeField(auto_now_add=True)
-    asistencia_confirmada = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ["-fecha_reserva"]
-
-    def __str__(self):
-        username = getattr(self.cliente, 'username', str(self.cliente))
-        return f'{username} - {self.clase.nombre_clase} ({self.fecha_reserva.date()})'
-
-
-class Contacto(models.Model):
-    nombre = models.CharField(max_length=100)
-    correo_electronico = models.EmailField()
-    mensaje = models.TextField()
-    fecha_envio = models.DateTimeField(auto_now_add=True)
-    estado_mensaje = models.CharField(
-        max_length=50,
-        choices=[
-            ('pendiente', 'Pendiente'),
-            ('revisado', 'Revisado'),
-            ('respondido', 'Respondido')
-        ],
-        default='pendiente'
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        verbose_name="Precio (CLP)",
+        help_text="Precio en pesos chilenos (sin decimales)"
     )
-    telefono = models.CharField(max_length=20)
-    comentario = models.TextField(blank=True)
+    image = models.ImageField(
+        upload_to='services/',
+        verbose_name="Imagen",
+        help_text="Imagen representativa del servicio"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Activo",
+        help_text="Si está activo, se muestra en la landing page"
+    )
+    order = models.IntegerField(
+        default=0,
+        verbose_name="Orden",
+        help_text="Orden de visualización (menor número aparece primero)"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de creación"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Última actualización"
+    )
 
     class Meta:
-        ordering = ["-fecha_envio"]
+        verbose_name = "Servicio"
+        verbose_name_plural = "Servicios"
+        ordering = ['order', 'name']
 
     def __str__(self):
-        return f'{self.nombre} - {self.estado_mensaje}'
+        return self.name
 
 
-# =========================
-# Gestión de Horarios (MVP)
-# =========================
-class HorarioBloque(models.Model):
-    class DiaSemana(models.IntegerChoices):
-        LUNES = 0, "Lunes"
-        MARTES = 1, "Martes"
-        MIERCOLES = 2, "Miércoles"
-        JUEVES = 3, "Jueves"
-        VIERNES = 4, "Viernes"
-        SABADO = 5, "Sábado"
-        DOMINGO = 6, "Domingo"
-
-    dia_semana = models.IntegerField(choices=DiaSemana.choices)
-    hora_inicio = models.TimeField()
-    hora_fin = models.TimeField()
-    # String para no depender de otro modelo (MVP simple)
-    instructor = models.CharField(
-        max_length=100, blank=True, help_text="Opcional")
-    capacidad = models.PositiveSmallIntegerField(default=10)
-    activo = models.BooleanField(default=True)
-
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
+class BlogPost(models.Model):
+    """
+    Modelo para gestionar publicaciones de blog/novedades.
+    Se muestran en la sección de novedades de la landing page.
+    """
+    title = models.CharField(
+        max_length=200,
+        verbose_name="Título",
+        help_text="Título de la publicación"
+    )
+    content = models.TextField(
+        verbose_name="Contenido",
+        help_text="Contenido completo de la publicación"
+    )
+    image = models.ImageField(
+        upload_to='blog/',
+        verbose_name="Imagen destacada",
+        help_text="Imagen principal de la publicación",
+        blank=True,
+        null=True
+    )
+    is_published = models.BooleanField(
+        default=True,
+        verbose_name="Publicado",
+        help_text="Si está publicado, se muestra en la landing page"
+    )
+    published_date = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Fecha de publicación"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de creación"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Última actualización"
+    )
 
     class Meta:
-        ordering = ("dia_semana", "hora_inicio")
-        verbose_name = "Bloque horario"
-        verbose_name_plural = "Bloques horarios"
+        verbose_name = "Publicación"
+        verbose_name_plural = "Publicaciones"
+        ordering = ['-published_date']
 
     def __str__(self):
-        return f"{self.get_dia_semana_display()} {self.hora_inicio}–{self.hora_fin} ({self.instructor or 'sin instructor'})"
+        return self.title
 
-    def clean(self):
-        # Validación básica de rango horario
-        from django.core.exceptions import ValidationError
-        if self.hora_fin <= self.hora_inicio:
-            raise ValidationError(
-                "La hora de fin debe ser mayor a la hora de inicio.")
+    def get_excerpt(self, words=30):
+        """Retorna un extracto del contenido"""
+        word_list = self.content.split()
+        if len(word_list) > words:
+            return ' '.join(word_list[:words]) + '...'
+        return self.content
+
+
+class ContactMessage(models.Model):
+    """
+    Modelo para gestionar mensajes de contacto recibidos desde la landing page.
+    Los administradores pueden ver y gestionar estos mensajes.
+    """
+    STATUS_CHOICES = [
+        ('new', 'Nuevo'),
+        ('read', 'Leído'),
+        ('replied', 'Respondido'),
+    ]
+
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Nombre"
+    )
+    email = models.EmailField(
+        verbose_name="Email"
+    )
+    phone = models.CharField(
+        max_length=20,
+        verbose_name="Teléfono",
+        blank=True
+    )
+    message = models.TextField(
+        verbose_name="Mensaje"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='new',
+        verbose_name="Estado"
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        verbose_name="Notas internas",
+        help_text="Notas privadas del administrador (no visibles para el cliente)"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de recepción"
+    )
+
+    class Meta:
+        verbose_name = "Mensaje de contacto"
+        verbose_name_plural = "Mensajes de contacto"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.email} ({self.get_status_display()})"
