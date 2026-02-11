@@ -1,0 +1,37 @@
+<!-- ============================================================
+     administrador/servicios/confirmar_eliminar.html
+     ============================================================ -->
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}Eliminar Servicio{% endblock %}
+{% block encabezado %}Eliminar Servicio{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="card border-danger border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
+        <h4 class="fw-bold">¿Eliminar este servicio?</h4>
+        <p class="text-muted mb-1">Esta acción no se puede deshacer.</p>
+        <p class="fw-semibold fs-5">{{ servicio.name }}</p>
+        <p class="text-muted small">${{ servicio.price|floatformat:0 }} CLP</p>
+        <form method="POST" class="d-flex gap-2 justify-content-center mt-4">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-trash3 me-1"></i> Sí, eliminar
+          </button>
+          <a href="{% url 'administrador:servicios_list' %}" class="btn btn-outline-secondary px-4">
+            Cancelar
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+<!-- ============================================================
+     SEPARADOR - Este archivo contiene múltiples templates
+     Solo el de arriba es para servicios/confirmar_eliminar.html
+     Los siguientes son para blog/ y contacto/
+     ============================================================ -->

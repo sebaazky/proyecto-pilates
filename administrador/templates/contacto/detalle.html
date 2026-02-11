@@ -1,0 +1,111 @@
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}Mensaje de {{ mensaje.name }} – Panel Admin{% endblock %}
+{% block encabezado %}Detalle del Mensaje{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Datos del mensaje -->
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <h5 class="mb-0 fw-semibold"><i class="bi bi-chat-left-text me-2 text-primary"></i>Mensaje recibido</h5>
+          <span class="badge rounded-pill
+            {% if mensaje.status == 'new' %}bg-danger
+            {% elif mensaje.status == 'read' %}bg-warning text-dark
+            {% else %}bg-success{% endif %}">
+            {{ mensaje.get_status_display }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label class="form-label text-muted small fw-semibold text-uppercase">Nombre</label>
+            <p class="fw-semibold mb-0">{{ mensaje.name }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label text-muted small fw-semibold text-uppercase">Email</label>
+            <p class="mb-0">
+              <a href="mailto:{{ mensaje.email }}" class="text-decoration-none">{{ mensaje.email }}</a>
+            </p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label text-muted small fw-semibold text-uppercase">Teléfono</label>
+            <p class="mb-0">{{ mensaje.phone|default:"No indicado" }}</p>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label text-muted small fw-semibold text-uppercase">Fecha recibido</label>
+            <p class="mb-0">{{ mensaje.created_at|date:"d de F Y, H:i" }}</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label text-muted small fw-semibold text-uppercase">Mensaje</label>
+          <div class="p-3 rounded-3 bg-light" style="white-space:pre-wrap;">{{ mensaje.message }}</div>
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+          <a href="mailto:{{ mensaje.email }}?subject=Re: Tu mensaje en PilatesReserva"
+             class="btn btn-primary">
+            <i class="bi bi-reply me-1"></i> Responder por email
+          </a>
+          {% if mensaje.phone %}
+            <a href="tel:{{ mensaje.phone }}" class="btn btn-outline-success">
+              <i class="bi bi-telephone me-1"></i> Llamar
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gestión del estado -->
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-semibold"><i class="bi bi-sliders me-2 text-warning"></i>Gestionar mensaje</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            {{ form.status }}
+            <div class="form-text">
+              <span class="badge bg-danger">Nuevo</span> → mensaje sin revisar<br>
+              <span class="badge bg-warning text-dark">Leído</span> → revisado<br>
+              <span class="badge bg-success">Respondido</span> → ya contactado
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Notas internas</label>
+            {{ form.admin_notes }}
+            <div class="form-text">Solo visible para administradores</div>
+          </div>
+
+          {% if mensaje.admin_notes %}
+            <div class="alert alert-light border mb-3">
+              <strong>Nota guardada:</strong><br>
+              {{ mensaje.admin_notes }}
+            </div>
+          {% endif %}
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning px-4 text-dark fw-semibold">
+              <i class="bi bi-check-lg me-1"></i> Guardar
+            </button>
+            <a href="{% url 'administrador:mensajes_list' %}" class="btn btn-outline-secondary px-4">
+              Volver
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

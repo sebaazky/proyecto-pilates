@@ -1,11 +1,177 @@
-{% extends 'base_admin.html' %}
-
-
-{% block title %}Panel Administrador{% endblock %}
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}Inicio – Panel Admin{% endblock %}
+{% block encabezado %}Bienvenido al Panel{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <h2 class="text-center">Panel del Administrador</h2>
-  <p class="text-center">Aquí puedes gestionar usuarios, clases, reservas y más.</p>
+
+<!-- Hero de bienvenida -->
+<div class="rounded-4 p-4 p-md-5 mb-4 text-white"
+     style="background:linear-gradient(90deg,#4f46e5 0%,#2563eb 40%,#0ea5e9 100%);">
+  <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+    <div>
+      <span class="badge text-bg-light text-primary fw-semibold mb-2">
+        <i class="bi bi-lightning-charge me-1"></i> Panel CMS
+      </span>
+      <h1 class="h3 fw-bold mb-1">¡Hola, {{ request.user.get_full_name|default:request.user.username }}!</h1>
+      <p class="mb-0 opacity-75">Gestiona el contenido de tu sitio web desde aquí.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'administrador:servicio_crear' %}" class="btn btn-light text-primary fw-semibold">
+        <i class="bi bi-plus-lg me-1"></i> Nuevo Servicio
+      </a>
+      <a href="{% url 'administrador:blog_crear' %}" class="btn btn-outline-light">
+        <i class="bi bi-pencil me-1"></i> Nueva Publicación
+      </a>
+    </div>
+  </div>
 </div>
+
+<!-- Tarjetas de resumen -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 d-flex align-items-center justify-content-center"
+             style="width:52px;height:52px;background:#eef2ff;">
+          <i class="bi bi-grid-3x3-gap fs-4 text-primary"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Servicios activos</div>
+          <div class="fw-bold fs-4">{{ servicios_activos }}<span class="fs-6 text-muted fw-normal"> / {{ total_servicios }}</span></div>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0">
+        <a href="{% url 'administrador:servicios_list' %}" class="btn btn-sm btn-outline-primary w-100">Ver servicios</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 d-flex align-items-center justify-content-center"
+             style="width:52px;height:52px;background:#f0fdf4;">
+          <i class="bi bi-megaphone fs-4 text-success"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Posts publicados</div>
+          <div class="fw-bold fs-4">{{ posts_publicados }}<span class="fs-6 text-muted fw-normal"> / {{ total_posts }}</span></div>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0">
+        <a href="{% url 'administrador:blog_list' %}" class="btn btn-sm btn-outline-success w-100">Ver blog</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 d-flex align-items-center justify-content-center"
+             style="width:52px;height:52px;background:#fef3c7;">
+          <i class="bi bi-inboxes fs-4 text-warning"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Mensajes nuevos</div>
+          <div class="fw-bold fs-4">{{ mensajes_nuevos }}<span class="fs-6 text-muted fw-normal"> / {{ total_mensajes }}</span></div>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0">
+        <a href="{% url 'administrador:mensajes_list' %}" class="btn btn-sm btn-outline-warning w-100">Ver mensajes</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="rounded-3 d-flex align-items-center justify-content-center"
+             style="width:52px;height:52px;background:#fce7f3;">
+          <i class="bi bi-globe fs-4 text-danger"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Ver sitio público</div>
+          <div class="fw-bold fs-6 mt-1">Landing page</div>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-0 pt-0">
+        <a href="{% url 'index:index' %}" target="_blank" class="btn btn-sm btn-outline-danger w-100">
+          <i class="bi bi-box-arrow-up-right me-1"></i> Abrir sitio
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mensajes recientes -->
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-inboxes me-2 text-warning"></i>Mensajes Recientes</h6>
+        <a href="{% url 'administrador:mensajes_list' %}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+      </div>
+      <div class="card-body p-0">
+        {% if mensajes_recientes %}
+          <ul class="list-group list-group-flush">
+            {% for m in mensajes_recientes %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                <div>
+                  <div class="fw-semibold">{{ m.name }}</div>
+                  <div class="text-muted small">{{ m.message|truncatechars:60 }}</div>
+                </div>
+                <div class="d-flex flex-column align-items-end gap-1">
+                  <span class="badge rounded-pill
+                    {% if m.status == 'new' %}bg-danger
+                    {% elif m.status == 'read' %}bg-warning text-dark
+                    {% else %}bg-success{% endif %}">
+                    {{ m.get_status_display }}
+                  </span>
+                  <a href="{% url 'administrador:mensaje_detalle' m.pk %}" class="btn btn-sm btn-outline-primary py-0">
+                    Ver
+                  </a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>No hay mensajes aún
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-grid-3x3-gap me-2 text-primary"></i>Últimos Servicios</h6>
+        <a href="{% url 'administrador:servicios_list' %}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+      </div>
+      <div class="card-body p-0">
+        {% if servicios_recientes %}
+          <ul class="list-group list-group-flush">
+            {% for s in servicios_recientes %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                <div>
+                  <div class="fw-semibold">{{ s.name }}</div>
+                  <div class="text-muted small">${{ s.price|floatformat:0 }} CLP</div>
+                </div>
+                <span class="badge rounded-pill {% if s.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                  {% if s.is_active %}Activo{% else %}Inactivo{% endif %}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-grid fs-2 d-block mb-2"></i>No hay servicios aún
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

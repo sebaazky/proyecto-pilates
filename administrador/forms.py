@@ -1,380 +1,54 @@
-# administrador/forms.py
+"""
+administrador/forms.py
+Formularios para el panel de administración CMS.
+Todo se gestiona principalmente desde Django Admin.
+"""
 from django import forms
-from django.db import models
-from django.contrib.auth import get_user_model
-from django.db.models import Q  # opcional
-
-# === Contacto: intentamos usar el de la app "index".
-#     Si no existe, caemos al de administrador.models como fallback.
-try:
-    from index.models import Contacto as ContactoModel
-except Exception:
-    from .models import Contacto as ContactoModel
-
-from .models import ClasePilates, HorarioBloque, PerfilUsuario
-
-User = get_user_model()
-
-# =======================
-#  Clases / Contacto / Reservas
-# =======================
-
-try:
-    # Si existe la app index con reservas reales, úsala
-    from index.models import Reserva as ReservaModel
-except Exception:
-    # Fallback local
-    from .models import ReservaClase as ReservaModel
+from .models import Service, BlogPost, ContactMessage
 
 
-class ClasePilatesForm(forms.ModelForm):
-    class Meta:
-        model = ClasePilates
-        fields = [
-            "nombre_clase",
-            "fecha",
-            "horario",
-            "capacidad_maxima",
-            "nombre_instructor",
-            "descripcion",
-        ]
-        widgets = {
-            "descripcion": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
-            "fecha": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "horario": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
-            "nombre_clase": forms.TextInput(attrs={"class": "form-control"}),
-            "capacidad_maxima": forms.NumberInput(
-                attrs={"class": "form-control", "min": 1}
-            ),
-            "nombre_instructor": forms.TextInput(attrs={"class": "form-control"}),
-        }
-
-
-def _has_field(model, name: str) -> bool:
-    try:
-        model._meta.get_field(name)
-        return True
-    except Exception:
-        return False
-
-
-# >>> Calculamos a NIVEL DE MÓDULO los campos editables del Contacto:
-CONTACTO_EDIT_FIELDS: list[str] = []
-if _has_field(ContactoModel, "estado_mensaje"):
-    CONTACTO_EDIT_FIELDS.append("estado_mensaje")
-if _has_field(ContactoModel, "comentario"):
-    CONTACTO_EDIT_FIELDS.append("comentario")
-
-
-class ContactoAdminForm(forms.ModelForm):
+class ServiceForm(forms.ModelForm):
     """
-    Form dinámico: solo incluye campos que EXISTEN en ContactoModel.
-    Además, asegura que 'estado_mensaje' sea un <select> con opciones:
-      - Usa choices del modelo si existen
-      - Si no, usa un fallback ('pendiente', 'revisado', 'respondido')
+    Formulario para gestionar servicios.
+    (Opcional - Django Admin ya maneja esto)
     """
-
-    # Fallback por si el modelo no define choices
-    ESTADO_FALLBACK = [
-        ("pendiente", "Pendiente"),
-        ("revisado", "Revisado"),
-        ("respondido", "Respondido"),
-    ]
-
     class Meta:
-        model = ContactoModel
-        fields = CONTACTO_EDIT_FIELDS  # ← calculado arriba
+        model = Service
+        fields = ['name', 'description', 'price',
+                  'image', 'is_active', 'order']
         widgets = {
-            "comentario": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        # importante: pasamos el usuario desde la vista
-        self.user = kwargs.pop("user", None)
-        super().__init__(*args, **kwargs)
 
-        # Asegurar <select> con opciones para 'estado_mensaje'
-        if "estado_mensaje" in self.fields:
-            try:
-                meta_field = ContactoModel._meta.get_field("estado_mensaje")
-                model_choices = list(getattr(meta_field, "choices", [])) or []
-            except Exception:
-                model_choices = []
-
-            choices = model_choices or self.ESTADO_FALLBACK
-
-            # reconstruimos el campo como ChoiceField para garantizar <select>
-            self.fields["estado_mensaje"] = forms.ChoiceField(
-                choices=choices,
-                required=False,  # pon True si quieres que sea obligatorio
-                widget=forms.Select(attrs={"class": "form-select"}),
-                label=self.fields["estado_mensaje"].label if "estado_mensaje" in self.fields else "Estado",
-            )
-
-            # valor inicial (cuando se edita)
-            if self.instance and getattr(self.instance, "estado_mensaje", None) is not None:
-                self.initial["estado_mensaje"] = self.instance.estado_mensaje
-
-        # permitir edición a superuser, staff o rol=administrador
-        es_admin = False
-        if self.user:
-            rol = (getattr(self.user, "rol", "") or "").lower()
-            es_admin = self.user.is_superuser or self.user.is_staff or rol == "administrador"
-
-        if not es_admin:
-            # si NO es admin, dejar campos deshabilitados (solo lectura)
-            for f in self.fields.values():
-                f.disabled = True
-
-
-class ReservaEstadoForm(forms.ModelForm):
-    """Selecciona dinámicamente el campo de 'estado' disponible en el modelo de reservas."""
-
-    class Meta:
-        model = ReservaModel
-        fields = []  # dinámico
-
-    estado_field_name: str | None = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        opts = self._meta.model._meta
-        candidates = ["estado", "estado_reserva", "status", "situacion"]
-
-        def _by_name():
-            for name in candidates:
-                try:
-                    return name, opts.get_field(name)
-                except Exception:
-                    pass
-            return None, None
-
-        def _first_with_choices():
-            for f in opts.get_fields():
-                if isinstance(f, models.Field) and getattr(f, "choices", None):
-                    if isinstance(
-                        f, (models.CharField, models.IntegerField,
-                            models.SmallIntegerField)
-                    ):
-                        return f.name, f
-            return None, None
-
-        def _safe_char():
-            for f in opts.get_fields():
-                if isinstance(f, models.CharField) and getattr(f, "editable", True):
-                    return f.name, f
-            return None, None
-
-        name, field = _by_name()
-        if not name:
-            name, field = _first_with_choices()
-        if not name:
-            name, field = _safe_char()
-
-        if not name or not field:
-            self.fields["__estado__"] = forms.CharField(
-                required=False,
-                label="Estado (no detectado)",
-                help_text="No se detectó el campo de estado en el modelo.",
-                widget=forms.TextInput(attrs={"class": "form-control"}),
-            )
-            self._meta.fields = ["__estado__"]
-            self.estado_field_name = None
-            return
-
-        formfield = field.formfield(
-            widget=forms.Select(attrs={"class": "form-select form-select-sm"})
-            if getattr(field, "choices", None)
-            else None
-        ) or forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
-        self.fields[name] = formfield
-        self._meta.fields = [name]
-        self.estado_field_name = name
-
-
-# =======================
-#  Admin de Usuarios
-# =======================
-
-class UsuarioAdminForm(forms.ModelForm):
-    rol = forms.CharField(required=False, label="Rol",
-                          help_text="Ej: administrador / cliente")
-
-    class Meta:
-        model = User
-        fields = ["first_name", "last_name", "email", "is_active"]
-        widgets = {
-            "first_name": forms.TextInput(attrs={"class": "form-control"}),
-            "last_name": forms.TextInput(attrs={"class": "form-control"}),
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["is_active"].widget = forms.CheckboxInput(
-            attrs={"class": "form-check-input"})
-        self.fields["is_active"].label = "Activo"
-        if hasattr(self.instance, "rol"):
-            self.fields["rol"].initial = getattr(self.instance, "rol") or ""
-            self.fields["rol"].widget = forms.TextInput(
-                attrs={"class": "form-control"})
-        else:
-            self.fields.pop("rol")
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        if "rol" in self.cleaned_data and hasattr(user, "rol"):
-            user.rol = (self.cleaned_data.get("rol") or "").strip()
-        if commit:
-            user.save()
-        return user
-
-
-class UsuarioCrearForm(forms.ModelForm):
+class BlogPostForm(forms.ModelForm):
     """
-    Crear usuario: username, nombre, email, rol y password opcional.
-    Si no se ingresa password, se crea con password no usable.
+    Formulario para gestionar publicaciones del blog.
+    (Opcional - Django Admin ya maneja esto)
     """
-
-    rol = forms.CharField(required=False, label="Rol",
-                          help_text="Ej: administrador / cliente")
-    password1 = forms.CharField(
-        required=False, widget=forms.PasswordInput(attrs={"class": "form-control"}), label="Password"
-    )
-    password2 = forms.CharField(
-        required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control"}),
-        label="Repite password",
-    )
-
     class Meta:
-        model = User
-        fields = ["username", "first_name", "last_name", "email", "is_active"]
+        model = BlogPost
+        fields = ['title', 'content', 'image',
+                  'is_published', 'published_date']
         widgets = {
-            "username": forms.TextInput(attrs={"class": "form-control"}),
-            "first_name": forms.TextInput(attrs={"class": "form-control"}),
-            "last_name": forms.TextInput(attrs={"class": "form-control"}),
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
+            'published_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
         }
 
-    def clean(self):
-        cleaned = super().clean()
-        p1 = cleaned.get("password1") or ""
-        p2 = cleaned.get("password2") or ""
-        if p1 or p2:
-            if p1 != p2:
-                raise forms.ValidationError("Las contraseñas no coinciden.")
-        return cleaned
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        if "rol" in self.cleaned_data and hasattr(user, "rol"):
-            user.rol = (self.cleaned_data.get("rol") or "").strip()
-
-        p1 = self.cleaned_data.get("password1") or ""
-        if p1:
-            user.set_password(p1)
-        else:
-            user.set_unusable_password()
-
-        if commit:
-            user.save()
-        return user
-
-
-# =======================
-#  Gestión de Horarios
-# =======================
-
-class HorarioBloqueForm(forms.ModelForm):
+class ContactMessageForm(forms.ModelForm):
+    """
+    Formulario para actualizar el estado de mensajes de contacto.
+    (Opcional - Django Admin ya maneja esto)
+    """
     class Meta:
-        model = HorarioBloque
-        fields = ["dia_semana", "hora_inicio", "hora_fin",
-                  "instructor", "capacidad", "activo"]
+        model = ContactMessage
+        fields = ['status', 'admin_notes']
         widgets = {
-            "dia_semana": forms.Select(attrs={"class": "form-select"}),
-            "hora_inicio": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
-            "hora_fin": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
-            "instructor": forms.TextInput(attrs={"class": "form-control", "placeholder": "Opcional"}),
-            "capacidad": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
-            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-        }
-
-    def clean(self):
-        cleaned = super().clean()
-        hi = cleaned.get("hora_inicio")
-        hf = cleaned.get("hora_fin")
-        if hi and hf and hf <= hi:
-            self.add_error(
-                "hora_fin", "La hora de fin debe ser mayor a la de inicio.")
-        return cleaned
-
-
-class GenerarClasesForm(forms.Form):
-    """Formulario para crear clases a partir de bloques en un rango de fechas."""
-
-    desde = forms.DateField(widget=forms.DateInput(
-        attrs={"type": "date", "class": "form-control"}))
-    hasta = forms.DateField(widget=forms.DateInput(
-        attrs={"type": "date", "class": "form-control"}))
-    solo_activos = forms.BooleanField(
-        required=False,
-        initial=True,
-        label="Usar solo bloques activos",
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-    )
-    nombre_clase = forms.CharField(
-        required=False, initial="Clase de Pilates", widget=forms.TextInput(attrs={"class": "form-control"})
-    )
-    descripcion = forms.CharField(
-        required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 2})
-    )
-    ignorar_existentes = forms.BooleanField(
-        required=True,
-        initial=True,
-        label="No crear si ya existe una clase en el mismo día/hora/instructor",
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-    )
-
-    def clean(self):
-        cleaned = super().clean()
-        d = cleaned.get("desde")
-        h = cleaned.get("hasta")
-        if d and h and h < d:
-            raise forms.ValidationError(
-                "La fecha 'hasta' debe ser mayor o igual a 'desde'.")
-        return cleaned
-
-
-# =======================
-#  Administrar Perfiles (CRUD)
-# =======================
-
-class PerfilUsuarioForm(forms.ModelForm):
-    """Formulario simple para el CRUD de PerfilUsuario."""
-
-    usuario = forms.ModelChoiceField(
-        queryset=User.objects.all(),
-        widget=forms.Select(attrs={"class": "form-select"}),
-        label="Usuario",
-    )
-
-    class Meta:
-        model = PerfilUsuario
-        fields = [
-            "usuario",
-            "primer_nombre",
-            "apellido_paterno",
-            "apellido_materno",
-            "rut",
-            "direccion",
-            "telefono",
-        ]
-        widgets = {
-            "primer_nombre": forms.TextInput(attrs={"class": "form-control"}),
-            "apellido_paterno": forms.TextInput(attrs={"class": "form-control"}),
-            "apellido_materno": forms.TextInput(attrs={"class": "form-control"}),
-            "rut": forms.TextInput(attrs={"class": "form-control"}),
-            "direccion": forms.TextInput(attrs={"class": "form-control"}),
-            "telefono": forms.TextInput(attrs={"class": "form-control"}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'admin_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }

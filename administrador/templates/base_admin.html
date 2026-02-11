@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block titulo %}Panel Administrador{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --surface-1:#f6f7fb; --surface-2:#ffffff;
+      --text-1:#0f172a; --text-2:#475569; --border:#e7edf3;
+      --hero-start:#2563eb; --hero-end:#0ea5e9;
+      --sb-w:280px; --sb-w-collapsed:88px;
+      --sb-bg:#0b1220; --sb-bg-2:#0e1626;
+      --sb-text:#e2e8f0; --sb-muted:#8aa0b6;
+      --sb-accent:#4f46e5; --sb-hover:#14213a;
+      --ring:0 10px 30px rgba(2,6,23,.35);
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --surface-1:#0b1020; --surface-2:#0f162a;
+      --text-1:#e5e7eb; --text-2:#b6c2d0; --border:#1e293b;
+      --hero-start:#0f172a; --hero-end:#0b3b6f;
+    }
+    html,body{height:100%;}
+    body{background:var(--surface-1);color:var(--text-1);}
+    .app{min-height:100%;display:flex;flex-direction:row;}
+    .sidebar{
+      width:var(--sb-w); background:linear-gradient(180deg,var(--sb-bg) 0%,var(--sb-bg-2) 100%);
+      color:var(--sb-text); position:sticky; top:0; height:100vh;
+      box-shadow:var(--ring); z-index:1020; transition:width .25s ease; overflow-y:auto;
+    }
+    .sidebar.collapsed{width:var(--sb-w-collapsed);}
+    .brand{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);}
+    .brand-name{font-weight:800;letter-spacing:.3px;color:#fff;margin:0;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .toggle-btn{color:#c7d2fe;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px 10px;cursor:pointer;}
+    .toggle-btn:hover{background:rgba(255,255,255,.15);}
+    .nav-section{padding:10px;}
+    .nav-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sb-muted);padding:8px 12px;margin:0;}
+    .nav-pills .nav-link{display:flex;align-items:center;gap:12px;color:var(--sb-text);border-radius:12px;padding:10px 12px;transition:all .15s ease;}
+    .nav-pills .nav-link .bi{font-size:1.08rem;width:22px;text-align:center;}
+    .nav-pills .nav-link:hover{background:var(--sb-hover);color:#fff;}
+    .nav-pills .nav-link.active{background:rgba(79,70,229,.15);color:#fff;border:1px solid rgba(79,70,229,.35);}
+    .sidebar.collapsed .brand-name,.sidebar.collapsed .nav-title,.sidebar.collapsed .nav-link span.label{display:none;}
+    .sidebar.collapsed .nav-link{justify-content:center;}
+    .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+    header.appbar{background:var(--surface-2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1010;}
+    .appbar .title{font-weight:700;color:var(--text-1);margin:0;}
+    .badge-soft{background:#eef2ff;color:#4f46e5;border:1px solid rgba(79,70,229,.25);border-radius:999px;font-weight:600;}
+    [data-theme="dark"] .badge-soft{background:rgba(79,70,229,.18);color:#cdd6ff;}
+    [data-theme="dark"] .form-control,[data-theme="dark"] .form-select{background:#0f172a;color:var(--text-1);border-color:#273449;}
+    [data-theme="dark"] .table{--bs-table-bg:transparent;color:var(--text-1);border-color:var(--border);}
+    [data-theme="dark"] .table thead th{color:var(--text-1);border-color:var(--border);background:#111a30;}
+    [data-theme="dark"] .dropdown-menu,[data-theme="dark"] .modal-content{background:var(--surface-2);color:var(--text-1);border-color:var(--border);}
+    [data-theme="dark"] .card{background:var(--surface-2);border-color:var(--border);}
+    @media(max-width:991px){.sidebar{position:fixed;height:100dvh;}.sidebar.off{transform:translateX(-100%);}  .main{margin-left:0;}}
+  </style>
+</head>
+<body>
+{% with rm=request.resolver_match %}
+{% with current_name=rm.url_name current_app=rm.app_name %}
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">
+      <div class="d-flex align-items-center gap-2">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+             style="width:36px;height:36px;background:rgba(255,255,255,.1);color:#c7d2fe;">
+          <i class="bi bi-lightning-charge"></i>
+        </div>
+        <h1 class="brand-name">PilatesReserva</h1>
+      </div>
+      <button class="toggle-btn d-none d-lg-inline-flex" type="button" id="sbToggle">
+        <i class="bi bi-layout-sidebar-inset"></i>
+      </button>
+      <button class="toggle-btn d-inline-flex d-lg-none" type="button" id="sbMobile">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+
+    <nav class="nav-section">
+      <p class="nav-title">Principal</p>
+      <ul class="nav nav-pills flex-column gap-1">
+
+        <li class="nav-item">
+          <a class="nav-link {% if current_name == 'home' %}active{% endif %}"
+             href="{% url 'administrador:home' %}">
+            <i class="bi bi-house"></i><span class="label">Inicio</span>
+          </a>
+        </li>
+
+      </ul>
+
+      <p class="nav-title mt-3">Contenido</p>
+      <ul class="nav nav-pills flex-column gap-1">
+
+        <li class="nav-item">
+          <a class="nav-link {% if 'servicio' in current_name %}active{% endif %}"
+             href="{% url 'administrador:servicios_list' %}">
+            <i class="bi bi-grid-3x3-gap"></i><span class="label">Servicios</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if 'blog' in current_name %}active{% endif %}"
+             href="{% url 'administrador:blog_list' %}">
+            <i class="bi bi-megaphone-fill"></i><span class="label">Blog / Novedades</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link {% if 'mensaje' in current_name %}active{% endif %}"
+             href="{% url 'administrador:mensajes_list' %}">
+            <i class="bi bi-inboxes"></i><span class="label">Mensajes</span>
+            {% if mensajes_nuevos %}
+              <span class="badge bg-danger rounded-pill ms-auto">{{ mensajes_nuevos }}</span>
+            {% endif %}
+          </a>
+        </li>
+
+      </ul>
+
+      <hr class="border-secondary-subtle my-3">
+
+      <ul class="nav nav-pills flex-column gap-1">
+        <li class="nav-item">
+          <form action="{% url 'login:logout' %}" method="post" class="w-100">
+            {% csrf_token %}
+            <button type="submit" class="nav-link text-danger w-100 border-0 bg-transparent text-start">
+              <i class="bi bi-box-arrow-right"></i><span class="label">Cerrar sesión</span>
+            </button>
+          </form>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="appbar">
+      <div class="container-fluid py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <h2 class="title">{% block encabezado %}Panel Administrador{% endblock %}</h2>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary d-inline-flex align-items-center"
+                    id="themeToggle" type="button">
+              <i id="themeIcon" class="bi bi-moon-stars"></i>
+            </button>
+            <span class="badge badge-soft px-3 py-2">
+              <i class="bi bi-person-circle me-1"></i>{{ request.user.get_full_name|default:request.user.username }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mensajes Django -->
+    {% if messages %}
+      <div class="container-fluid px-4 pt-3">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="container-fluid py-4">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+{% endwith %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+  const root = document.documentElement;
+  const THEME_KEY = 'pr-theme';
+  function setIcon(t){ const i=document.getElementById('themeIcon'); if(i) i.className=(t==='dark')?'bi bi-sun':'bi bi-moon-stars'; }
+  function applyTheme(t){ root.setAttribute('data-theme',t); setIcon(t); }
+  let saved=null; try{saved=localStorage.getItem(THEME_KEY);}catch(e){}
+  let theme=saved||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  applyTheme(theme);
+  const toggle=document.getElementById('themeToggle');
+  if(toggle){ toggle.addEventListener('click',()=>{ theme=(root.getAttribute('data-theme')==='dark')?'light':'dark'; applyTheme(theme); try{localStorage.setItem(THEME_KEY,theme);}catch(e){} }); }
+  const sb=document.getElementById('sidebar');
+  const btn=document.getElementById('sbToggle');
+  const mob=document.getElementById('sbMobile');
+  const SB_KEY='sb-collapsed';
+  try{ if(localStorage.getItem(SB_KEY)==='1') sb.classList.add('collapsed'); }catch(e){}
+  if(btn){ btn.addEventListener('click',()=>{ sb.classList.toggle('collapsed'); try{localStorage.setItem(SB_KEY,sb.classList.contains('collapsed')?'1':'0');}catch(e){} }); }
+  if(mob){ mob.addEventListener('click',()=>sb.classList.toggle('off')); }
+})();
+</script>
+</body>
+</html>
