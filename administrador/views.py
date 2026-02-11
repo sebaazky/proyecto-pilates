@@ -47,7 +47,7 @@ def home(request):
         'servicios_recientes': Service.objects.order_by('-created_at')[:3],
         'posts_recientes': BlogPost.objects.order_by('-published_date')[:3],
     }
-    return render(request, 'administrador/home.html', context)
+    return render(request, 'administrador/admin_home.html', context)
 
 
 # ─────────────────────────────────────────────
