@@ -1,0 +1,64 @@
+{% extends 'index/base_index.html' %}
+{% block title %}Contacto | PilatesReserva{% endblock %}
+
+{% block content %}
+<section class="d-flex align-items-start justify-content-center bg-body-tertiary" style="min-height:85vh;padding-top:5vh;">
+  <div class="container" style="max-width:650px;">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="w-100" style="height:8px;background:linear-gradient(90deg,#0dcaf0,#6610f2);"></div>
+      <div class="card-body p-4">
+        <div class="text-center mb-3">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+               style="width:56px;height:56px;background:rgba(13,202,240,.15);">
+            <i class="bi bi-chat-dots-fill fs-4 text-info"></i>
+          </div>
+          <h2 class="h3 fw-bold mb-0">Contáctanos</h2>
+          <small class="text-secondary">Te respondemos a la brevedad</small>
+        </div>
+
+        {% if errores %}
+          <div class="alert alert-danger rounded-3 py-2">
+            <ul class="mb-0">
+              {% for e in errores %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form method="POST" class="mt-2">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Nombre <span class="text-danger">*</span></label>
+            <input type="text" name="nombre" value="{{ nombre|default:'' }}"
+                   class="form-control rounded-3" placeholder="Tu nombre completo" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Email <span class="text-danger">*</span></label>
+            <input type="email" name="email" value="{{ email|default:'' }}"
+                   class="form-control rounded-3" placeholder="tu@email.com" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Teléfono</label>
+            <input type="text" name="telefono" value="{{ telefono|default:'' }}"
+                   class="form-control rounded-3" placeholder="+56 9 xxxx xxxx">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Mensaje <span class="text-danger">*</span></label>
+            <textarea name="mensaje" rows="4" class="form-control rounded-3"
+                      placeholder="¿En qué podemos ayudarte?" required>{{ mensaje|default:'' }}</textarea>
+          </div>
+
+          <button type="submit"
+                  class="btn w-100 fw-semibold py-2 rounded-3 text-white"
+                  style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);border:0;">
+            Enviar mensaje
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

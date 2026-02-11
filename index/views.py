@@ -1,90 +1,80 @@
-"""
-index/views.py
-Vistas simplificadas para la landing page del proyecto PilatesReserva.
-"""
-from django.shortcuts import render, redirect
-from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 from administrador.models import Service, BlogPost, ContactMessage
 
 
 def index(request):
-    """
-    Vista principal de la landing page.
-    Muestra servicios activos y últimas publicaciones del blog.
-    """
-    # Obtener servicios activos ordenados
-    services = Service.objects.filter(is_active=True).order_by('order', 'name')
-
-    # Obtener últimas 3 publicaciones
-    blog_posts = BlogPost.objects.filter(is_published=True)[:3]
-
+    """Página principal con servicios y blog desde la BD."""
     context = {
-        'services': services,
-        'blog_posts': blog_posts,
+        'services': Service.objects.filter(is_active=True).order_by('order'),
+        'blog_posts': BlogPost.objects.filter(is_published=True).order_by('-published_date')[:3],
     }
-
     return render(request, 'index/index.html', context)
 
 
-def contacto_publico(request):
-    """
-    Procesa el formulario de contacto de la landing page.
-    """
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
-        message = request.POST.get('message', '').strip()
-
-        # Validación básica
-        if not name or not email or not message:
-            messages.error(
-                request, 'Por favor completa todos los campos obligatorios.')
-            return redirect('index:index')
-
-        # Crear mensaje de contacto
-        ContactMessage.objects.create(
-            name=name,
-            email=email,
-            phone=phone,
-            message=message,
-            status='new'
-        )
-
-        messages.success(
-            request,
-            '¡Gracias por contactarnos! Te responderemos pronto.'
-        )
-        return redirect('index:contacto_exito')
-
-    # Si no es POST, mostrar página de contacto
-    return render(request, 'index/contacto.html')
-
-
-def contacto_exito(request):
-    """
-    Página de confirmación después de enviar el formulario de contacto.
-    """
-    return render(request, 'index/contacto_exito.html')
-
-
 def nosotros(request):
-    """
-    Página "Sobre Nosotros" / "Quiénes Somos"
-    """
+    """Página Nosotros."""
     return render(request, 'index/nosotros.html')
 
 
 def novedades(request):
-    """
-    Listado público de novedades/blog.
-    """
-    # Obtener todas las publicaciones publicadas
+    """Página de blog/novedades completa."""
     posts = BlogPost.objects.filter(
         is_published=True).order_by('-published_date')
+    return render(request, 'index/novedades.html', {'posts': posts})
 
-    context = {
-        'posts': posts,
-    }
 
-    return render(request, 'index/novedades.html', context)
+def servicios(request):
+    """Página pública de todos los servicios."""
+    todos = Service.objects.filter(is_active=True).order_by('order')
+    return render(request, 'index/servicios.html', {'servicios': todos})
+
+
+def servicio_detalle(request, pk):
+    """Detalle de un servicio específico."""
+    servicio = get_object_or_404(Service, pk=pk, is_active=True)
+    otros = Service.objects.filter(is_active=True).exclude(
+        pk=pk).order_by('order')[:3]
+    return render(request, 'index/servicio_detalle.html', {
+        'servicio': servicio,
+        'otros': otros,
+    })
+
+
+def contacto_publico(request):
+    """Formulario de contacto público."""
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre',   '').strip()
+        email = request.POST.get('email',    '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        mensaje = request.POST.get('mensaje',  '').strip()
+
+        errores = []
+        if not nombre:
+            errores.append('El nombre es obligatorio.')
+        if not email or '@' not in email:
+            errores.append('El email no es válido.')
+        if not mensaje:
+            errores.append('El mensaje es obligatorio.')
+
+        if errores:
+            return render(request, 'index/contacto_form.html', {
+                'errores':  errores,
+                'nombre':   nombre,
+                'email':    email,
+                'telefono': telefono,
+                'mensaje':  mensaje,
+            })
+
+        ContactMessage.objects.create(
+            name=nombre, email=email,
+            phone=telefono, message=mensaje,
+            status='new',
+        )
+        return redirect('index:contacto_exito')
+
+    return render(request, 'index/contacto_form.html')
+
+
+def contacto_exito(request):
+    """Confirmación tras enviar el formulario de contacto."""
+    return render(request, 'index/contacto_exito.html')

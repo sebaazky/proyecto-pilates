@@ -1,0 +1,403 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}PilatesReserva{% endblock %}</title>
+
+  <link rel="icon" href="{% static 'favicon.ico' %}" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=41" />
+  <link rel="stylesheet" href="{% static 'css/navbar.css' %}?v=52" />
+
+  <style>
+    /* ── VARIABLES ────────────────────────────────── */
+    :root {
+      --pr-bg:      #fffefa;
+      --pr-surface: #ffffff;
+      --pr-soft:    #fff9f1;
+      --pr-border:  #eadfce;
+      --pr-ac1:     #12b3ff;
+      --pr-ac2:     #4f8df7;
+      --pr-ac3:     #48e0c2;
+      --pr-ac4:     #f59e0b;
+      --pr-rose:    #ff6db3;
+      --pr-vio:     #8b5cf6;
+      --pr-text:    #0f172a;
+      --pr-text2:   #475569;
+    }
+    [data-theme="dark"] {
+      --pr-bg:      #0b1020;
+      --pr-surface: #0f162a;
+      --pr-soft:    #111827;
+      --pr-border:  #1e293b;
+      --pr-ac1:     #38bdf8;
+      --pr-ac2:     #818cf8;
+      --pr-text:    #e5e7eb;
+      --pr-text2:   #94a3b8;
+    }
+
+    html, body {
+      background: var(--pr-bg);
+      color: var(--pr-text);
+      transition: background .3s, color .3s;
+    }
+
+    /* ── FONDO SUTIL ──────────────────────────────── */
+    body::before {
+      content: ""; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(70vmax 70vmax at -10% -20%, rgba(18,179,255,.05), transparent 60%),
+        radial-gradient(70vmax 70vmax at 110% 0%,  rgba(139,92,246,.05), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65));
+    }
+    [data-theme="dark"] body::before {
+      background:
+        radial-gradient(70vmax 70vmax at -10% -20%, rgba(18,179,255,.04), transparent 60%),
+        radial-gradient(70vmax 70vmax at 110% 0%,  rgba(139,92,246,.04), transparent 60%),
+        linear-gradient(180deg, rgba(11,16,32,.98), rgba(15,22,42,.95));
+    }
+
+    /* ── BARRA ARCOÍRIS ───────────────────────────── */
+    .hr-accent {
+      height: 3px;
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2), var(--pr-ac3), var(--pr-rose), var(--pr-ac4));
+    }
+
+    /* ── TOPBAR ───────────────────────────────────── */
+    .tb-aura {
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--pr-border);
+      backdrop-filter: blur(8px);
+      padding: .5rem 0;
+      transition: background .3s;
+    }
+    [data-theme="dark"] .tb-aura {
+      background: rgba(11,16,32,.92);
+      border-color: var(--pr-border);
+    }
+    .tb-flex { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+    .tb-brand { display: flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--pr-text); }
+    .tb-badge {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pr-ac1), var(--pr-ac2));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: .9rem; flex-shrink: 0;
+    }
+    .tb-title { font-weight: 700; font-size: .95rem; color: var(--pr-text); }
+    .tb-title span { color: var(--pr-ac2); }
+    .tb-chips { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .tb-pill {
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .8rem; padding: .3rem .7rem;
+      border-radius: 999px; border: 1px solid var(--pr-border);
+      background: var(--pr-surface); color: var(--pr-text2);
+      text-decoration: none; transition: box-shadow .2s;
+    }
+    .tb-pill:hover { box-shadow: 0 10px 20px rgba(17,24,39,.06); color: var(--pr-text); }
+
+    /* ── NAVBAR ───────────────────────────────────── */
+    .nav--glass {
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(234,223,206,.9) !important;
+      box-shadow: 0 12px 24px rgba(17,24,39,.06);
+    }
+    [data-theme="dark"] .nav--glass {
+      background: rgba(11,16,32,.9) !important;
+      border-color: rgba(30,41,59,.9) !important;
+    }
+    .navbar .nav-link {
+      border-radius: 999px;
+      border: 1px solid var(--pr-border);
+      background: var(--pr-surface);
+      color: var(--pr-text) !important;
+      transition: box-shadow .2s ease, transform .15s ease;
+      font-size: .9rem;
+    }
+    .navbar .nav-link:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(17,24,39,.08);
+    }
+    .navbar .nav-link.active {
+      color: #fff !important;
+      border: 0;
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      box-shadow: 0 12px 24px rgba(79,141,247,.26);
+    }
+
+    /* ── TRUST BAR ────────────────────────────────── */
+    .lp-trustbar {
+      background: rgba(255,255,255,.8);
+      border-bottom: 1px solid var(--pr-border);
+      font-size: .82rem;
+      color: var(--pr-text2);
+    }
+    [data-theme="dark"] .lp-trustbar {
+      background: rgba(11,16,32,.7);
+      border-color: var(--pr-border);
+    }
+
+    /* ── HERO CARD ────────────────────────────────── */
+    /* MODO CLARO: fondo blanco translúcido */
+    .idx-hero-card {
+      background: rgba(255,255,255,.93);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 20px 40px rgba(0,0,0,.18),
+                  inset 0 0 0 1px rgba(255,255,255,.6);
+      border: 1px solid rgba(255,255,255,.5);
+    }
+    .idx-hero-card h1 { color: #0f172a !important; }
+    .idx-hero-card p  { color: #304057 !important; }
+
+    /* MODO OSCURO: fondo oscuro translúcido */
+    [data-theme="dark"] .idx-hero-card {
+      background: rgba(10,14,30,.88) !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      box-shadow: 0 20px 40px rgba(0,0,0,.5),
+                  inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    [data-theme="dark"] .idx-hero-card h1 { color: #f1f5f9 !important; }
+    [data-theme="dark"] .idx-hero-card p  { color: #94a3b8 !important; }
+    [data-theme="dark"] .idx-hero-card .badge { 
+      background: rgba(56,189,248,.15) !important;
+      color: #38bdf8 !important;
+    }
+    [data-theme="dark"] .idx-hero-card .btn-outline-dark {
+      border-color: rgba(255,255,255,.3) !important;
+      color: #e2e8f0 !important;
+    }
+    [data-theme="dark"] .idx-hero-card .text-bg-light {
+      background: rgba(255,255,255,.1) !important;
+      color: #cbd5e1 !important;
+      border-color: rgba(255,255,255,.15) !important;
+    }
+
+    /* ── FOOTER ───────────────────────────────────── */
+    .footer-neo {
+      background: linear-gradient(180deg, #0b1220 0%, #0a0e1a 100%);
+      color: #e2e8f0;
+    }
+    .footer-divider { border-color: rgba(255,255,255,.08); }
+    .footer-title   { color: #fff; letter-spacing: .3px; }
+    .footer-list li { margin-bottom: .45rem; }
+    .footer-link    { opacity: .75; transition: opacity .15s; }
+    .footer-link:hover { opacity: 1; }
+    .btn-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #e2e8f0; display: inline-flex;
+      align-items: center; justify-content: center;
+      text-decoration: none; transition: background .2s;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+    /* ── BOTÓN ARRIBA ─────────────────────────────── */
+    .btn-to-top {
+      bottom: 1.5rem; right: 1.5rem;
+      width: 42px; height: 42px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center; z-index: 999;
+    }
+    .btn-to-top.show { display: flex; }
+
+    /* ── REVEAL ───────────────────────────────────── */
+    .lp-reveal {
+      opacity: 0; transform: translateY(14px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .lp-reveal.is-in { opacity: 1; transform: none; }
+
+    /* ── UTILIDADES GENERALES ─────────────────────── */
+    .btn-gradient {
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; border: 0;
+      box-shadow: 0 12px 26px rgba(79,141,247,.26);
+    }
+    .btn-gradient:hover { filter: brightness(1.05); color: #fff; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- TOP BAR -->
+  <div class="tb-aura">
+    <div class="container tb-flex">
+      <a href="{% url 'index:index' %}" class="tb-brand">
+        <span class="tb-badge"><i class="bi bi-heart-pulse-fill"></i></span>
+        <span class="tb-title">Pilates <span>Reforma</span></span>
+      </a>
+      <nav class="tb-chips">
+        <span class="tb-pill"><i class="bi bi-geo-alt-fill"></i><span>Peñalolén · Santiago</span></span>
+        <a class="tb-pill" href="tel:+56912345678"><i class="bi bi-telephone-fill"></i><span>+56 9 1234 5678</span></a>
+        <a class="tb-pill" href="mailto:contacto@pilatesreforma.cl"><i class="bi bi-envelope-fill"></i><span>contacto@pilatesreforma.cl</span></a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="hr-accent"></div>
+
+  <!-- NAVBAR -->
+  {% with current=request.resolver_match.url_name|default:"" %}
+  <nav id="navbar" class="navbar navbar-expand-lg sticky-top border-0 py-3 nav--glass">
+    <div class="container justify-content-center">
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <ul class="navbar-nav align-items-center gap-2">
+          <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if current == 'index' %}active{% endif %}"
+               href="{% url 'index:index' %}">
+              <i class="bi bi-house-door me-1"></i>Inicio
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if current == 'nosotros' %}active{% endif %}"
+               href="{% url 'index:nosotros' %}">
+              <i class="bi bi-people-fill me-1"></i>Nosotros
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if current == 'servicios' %}active{% endif %}"
+               href="{% url 'index:servicios' %}">
+              <i class="bi bi-grid-3x3-gap me-1"></i>Servicios
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if current == 'novedades' %}active{% endif %}"
+               href="{% url 'index:novedades' %}">
+              <i class="bi bi-broadcast me-1"></i>Novedades
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if current == 'contacto_publico' %}active{% endif %}"
+               href="{% url 'index:contacto_publico' %}">
+              <i class="bi bi-chat-dots me-1"></i>Contacto
+            </a>
+          </li>
+        </ul>
+        <div class="ms-lg-3 mt-3 mt-lg-0">
+          <button class="btn btn-outline-secondary d-inline-flex align-items-center"
+                  id="themeToggle" type="button" aria-label="Cambiar tema">
+            <i id="themeIcon" class="bi bi-moon-stars"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  {% endwith %}
+
+  <!-- TRUST BAR (solo index) -->
+  {% if request.resolver_match.url_name == 'index' %}
+  <div class="lp-trustbar py-2">
+    <div class="container d-flex flex-wrap gap-3 justify-content-center small">
+      <div class="d-flex align-items-center gap-2"><i class="bi bi-bag-check"></i> Reserva fácil</div>
+      <div class="d-flex align-items-center gap-2"><i class="bi bi-people"></i> Grupos pequeños</div>
+      <div class="d-flex align-items-center gap-2"><i class="bi bi-award"></i> Certificaciones internacionales</div>
+      <div class="d-flex align-items-center gap-2"><i class="bi bi-shield-plus"></i> Medidas higiénicas</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CONTENIDO -->
+  {% block content %}{% endblock %}
+
+  <!-- FOOTER -->
+  <footer class="footer-neo text-white mt-auto">
+    <div class="hr-accent"></div>
+    <div class="container py-5">
+      <div class="row g-4 align-items-start">
+
+        <div class="col-12 col-lg-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="tb-badge"><i class="bi bi-heart-pulse-fill"></i></span>
+            <h5 class="m-0 fw-bold footer-title">Pilates Reforma</h5>
+          </div>
+          <p class="opacity-75 small mb-3">
+            Clases Mat, Reformer y grupales con instructores certificados en Peñalolén, Santiago.
+          </p>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn-icon" href="https://wa.me/56912345678" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+            <a class="btn-icon" href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+            <a class="btn-icon" href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="fw-semibold footer-title">Navegación</h6>
+          <ul class="list-unstyled small m-0 footer-list">
+            <li><a class="footer-link text-white text-decoration-none d-flex align-items-center gap-2" href="{% url 'index:index' %}"><i class="bi bi-house-door"></i>Inicio</a></li>
+            <li><a class="footer-link text-white text-decoration-none d-flex align-items-center gap-2" href="{% url 'index:nosotros' %}"><i class="bi bi-people"></i>Nosotros</a></li>
+            <li><a class="footer-link text-white text-decoration-none d-flex align-items-center gap-2" href="{% url 'index:servicios' %}"><i class="bi bi-grid-3x3-gap"></i>Servicios</a></li>
+            <li><a class="footer-link text-white text-decoration-none d-flex align-items-center gap-2" href="{% url 'index:novedades' %}"><i class="bi bi-broadcast"></i>Novedades</a></li>
+            <li><a class="footer-link text-white text-decoration-none d-flex align-items-center gap-2" href="{% url 'index:contacto_publico' %}"><i class="bi bi-chat-dots"></i>Contacto</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h6 class="fw-semibold footer-title">Contacto</h6>
+          <ul class="list-unstyled small m-0 footer-list">
+            <li class="d-flex align-items-start gap-2"><i class="bi bi-geo-alt mt-1"></i><span>Av. Consistorial 2810, Peñalolén</span></li>
+            <li class="d-flex align-items-start gap-2"><i class="bi bi-telephone mt-1"></i><a class="footer-link text-white text-decoration-none" href="tel:+56912345678">+56 9 1234 5678</a></li>
+            <li class="d-flex align-items-start gap-2"><i class="bi bi-envelope mt-1"></i><a class="footer-link text-white text-decoration-none" href="mailto:contacto@pilatesreforma.cl">contacto@pilatesreforma.cl</a></li>
+          </ul>
+        </div>
+
+        <div class="col-12 col-lg-3">
+          <h6 class="fw-semibold footer-title">Horarios</h6>
+          <ul class="list-unstyled small m-0 opacity-75 footer-list">
+            <li class="d-flex align-items-center gap-2"><i class="bi bi-clock"></i>Lun–Vie: 07:00–21:00</li>
+            <li class="d-flex align-items-center gap-2"><i class="bi bi-clock"></i>Sábados: 09:00–14:00</li>
+            <li class="d-flex align-items-center gap-2"><i class="bi bi-calendar-x"></i>Domingos: Cerrado</li>
+          </ul>
+        </div>
+
+      </div>
+      <hr class="footer-divider my-4"/>
+      <div class="d-flex flex-wrap justify-content-between align-items-center small">
+        <div class="opacity-75">© <span id="year"></span> Pilates Reforma. Todos los derechos reservados.</div>
+        <a class="footer-link text-white text-decoration-none" href="{% url 'index:contacto_publico' %}">Soporte</a>
+      </div>
+    </div>
+
+    <button type="button" aria-label="Volver arriba"
+            class="btn btn-light border-0 shadow position-fixed btn-to-top" id="btnTop">
+      <i class="bi bi-arrow-up"></i>
+    </button>
+    <script>(function(){const y=document.getElementById("year");if(y)y.textContent=new Date().getFullYear();})();</script>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  (function(){
+    const root = document.documentElement, KEY = "pr-theme";
+    function setIcon(t){ const i=document.getElementById("themeIcon"); if(i) i.className=t==="dark"?"bi bi-sun":"bi bi-moon-stars"; }
+    function apply(t){ root.setAttribute("data-theme",t); setIcon(t); }
+    let saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
+    const init = saved||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+    apply(init);
+    const btn = document.getElementById("themeToggle");
+    if(btn){ btn.addEventListener("click",()=>{ const n=root.getAttribute("data-theme")==="dark"?"light":"dark"; apply(n); try{localStorage.setItem(KEY,n);}catch(e){} }); }
+
+    // Reveal
+    const io = new IntersectionObserver(entries=>{ entries.forEach(e=>e.target.classList.toggle("is-in",e.isIntersecting)); },{threshold:0.14});
+    document.querySelectorAll(".lp-reveal").forEach(el=>io.observe(el));
+
+    // Botón arriba
+    const top = document.getElementById("btnTop");
+    if(top){
+      window.addEventListener("scroll",()=>top.classList.toggle("show",window.scrollY>400));
+      top.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+    }
+  })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

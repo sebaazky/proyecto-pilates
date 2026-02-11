@@ -1,7 +1,55 @@
-{% extends "base_index.html" %}
+{% extends 'index/base_index.html' %}
 {% block title %}Novedades | PilatesReserva{% endblock %}
 
 {% block content %}
-  {# Muestra el bloque completo (hero + controles + destacado + grid) #}
-  {% include "index/_news_feed.html" with posts=posts is_panel=False only %}
+<section class="py-5">
+  <div class="container">
+
+    <div class="text-center mb-5">
+      <span class="badge rounded-pill mb-2"
+            style="background:rgba(13,202,240,.15);color:var(--bs-info);border:1px solid rgba(13,202,240,.3);">
+        Blog
+      </span>
+      <h1 class="fw-bold">Novedades</h1>
+      <p class="text-muted">Artículos, tips y noticias de PilatesReserva</p>
+    </div>
+
+    {% if posts %}
+      <div class="row g-4">
+        {% for post in posts %}
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
+                 style="transition:all .25s ease;"
+                 onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 1rem 2rem rgba(0,0,0,.1)';"
+                 onmouseleave="this.style.transform='none';this.style.boxShadow='';">
+              {% if post.image %}
+                <img src="{{ post.image.url }}" class="card-img-top"
+                     style="height:200px;object-fit:cover;" alt="{{ post.title }}">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center"
+                     style="height:200px;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+                  <i class="bi bi-megaphone text-muted fs-1"></i>
+                </div>
+              {% endif %}
+              <div class="card-body p-4 d-flex flex-column">
+                <small class="text-muted mb-1">{{ post.published_date|date:"d \d\e F \d\e Y" }}</small>
+                <h5 class="card-title fw-bold">{{ post.title }}</h5>
+                <p class="card-text text-muted flex-grow-1">{{ post.get_excerpt }}</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-megaphone fs-1 text-muted d-block mb-3"></i>
+        <h5 class="text-muted">No hay publicaciones todavía</h5>
+        <a href="{% url 'index:index' %}" class="btn btn-outline-secondary mt-3 rounded-3">
+          Volver al inicio
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
 {% endblock %}

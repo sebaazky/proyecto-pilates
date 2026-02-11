@@ -1,0 +1,21 @@
+{% extends 'index/base_index.html' %}
+{% block title %}Mensaje Enviado | PilatesReserva{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+  <div class="card border-0 shadow-sm rounded-4 text-center overflow-hidden">
+    <div class="w-100" style="height:8px;background:linear-gradient(90deg,#0dcaf0,#6610f2);"></div>
+    <div class="card-body py-5 px-4">
+      <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+           style="width:72px;height:72px;background:rgba(13,202,240,.15);">
+        <i class="bi bi-check-circle-fill fs-2 text-info"></i>
+      </div>
+      <h3 class="fw-bold mb-2">¡Mensaje enviado!</h3>
+      <p class="text-muted mb-4">Gracias por contactarnos. Nos pondremos en contacto contigo a la brevedad.</p>
+      <a href="{% url 'index:index' %}" class="btn fw-semibold rounded-3 text-white px-4"
+         style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);border:0;">
+        <i class="bi bi-house me-1"></i> Volver al inicio
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
