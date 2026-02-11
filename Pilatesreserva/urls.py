@@ -13,7 +13,6 @@ urlpatterns = [
 
     # Módulos propios con namespace
     path("login/", include(("login.urls", "login"), namespace="login")),
-    path("usuarios/", include(("usuarios.urls", "usuarios"), namespace="usuarios")),
     path("administrador/", include(("administrador.urls",
          "administrador"), namespace="administrador")),
 ]
