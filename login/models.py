@@ -18,4 +18,3 @@ class User(AbstractUser):
         verbose_name="Rol",
         help_text="Rol del usuario en el sistema"
     )
-    ...
