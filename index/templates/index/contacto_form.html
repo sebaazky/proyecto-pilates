@@ -1,64 +1,438 @@
 {% extends 'index/base_index.html' %}
 {% block title %}Contacto | PilatesReserva{% endblock %}
 
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ct-ink:    #0a0a0f;
+    --ct-cream:  #faf8f4;
+    --ct-gold:   #c9a84c;
+    --ct-cyan:   #12b3ff;
+    --ct-violet: #7c3aed;
+    --ct-mist:   #f0ede8;
+    --ct-border: #e2ddd6;
+  }
+  [data-theme="dark"] {
+    --ct-ink:    #f0ede8;
+    --ct-cream:  #0d0d14;
+    --ct-mist:   #12121e;
+    --ct-border: #1e2030;
+  }
+
+  /* ── LAYOUT ───────────────────────────────────── */
+  .ct-wrap {
+    min-height: calc(100vh - 120px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 900px) {
+    .ct-wrap { grid-template-columns: 1fr; }
+    .ct-left  { display: none; }
+  }
+
+  /* ── PANEL IZQUIERDO (oscuro + decorativo) ────── */
+  .ct-left {
+    background: var(--ct-ink);
+    color: #fff;
+    padding: clamp(3rem, 7vw, 5rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  [data-theme="dark"] .ct-left {
+    background: #07070f;
+    border-right: 1px solid var(--ct-border);
+  }
+  .ct-left::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 0% 0%,   rgba(18,179,255,.22), transparent 55%),
+      radial-gradient(ellipse 50% 60% at 100% 100%, rgba(124,58,237,.28), transparent 55%);
+    pointer-events: none;
+  }
+  .ct-left-bg-text {
+    position: absolute;
+    bottom: -3rem; right: -2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(8rem, 18vw, 13rem);
+    font-weight: 900;
+    color: rgba(255,255,255,.03);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ct-left-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ct-gold);
+    margin-bottom: 1rem;
+  }
+  .ct-left-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: .95;
+    letter-spacing: -.02em;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+  .ct-left-title em { color: var(--ct-gold); font-style: italic; }
+  .ct-left-desc {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .98rem;
+    line-height: 1.75;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Info de contacto */
+  .ct-info-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .ct-info-item {
+    display: flex; align-items: center; gap: 1rem;
+    font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    color: rgba(255,255,255,.75);
+  }
+  .ct-info-ico {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: var(--ct-cyan);
+  }
+  .ct-info-item a { color: inherit; text-decoration: none; }
+  .ct-info-item a:hover { color: var(--ct-gold); }
+
+  /* Horario pill */
+  .ct-horario {
+    display: inline-flex; align-items: center; gap: .6rem;
+    background: rgba(201,168,76,.12);
+    border: 1px solid rgba(201,168,76,.25);
+    border-radius: 999px;
+    padding: .5rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem; color: var(--ct-gold);
+    margin-top: 2rem;
+  }
+
+  /* ── PANEL DERECHO (formulario) ───────────────── */
+  .ct-right {
+    background: var(--ct-cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2rem, 5vw, 4rem);
+  }
+  .ct-form-wrap { width: 100%; max-width: 480px; }
+
+  .ct-form-header { margin-bottom: 2rem; }
+  .ct-form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700;
+    color: var(--ct-ink);
+    margin-bottom: .4rem;
+    line-height: 1.15;
+  }
+  .ct-form-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: #8a8a9a;
+  }
+
+  /* Campos */
+  .ct-field { margin-bottom: 1.25rem; }
+  .ct-label {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ct-ink);
+    margin-bottom: .5rem;
+    opacity: .7;
+  }
+  [data-theme="dark"] .ct-label { color: #b0b0c8; }
+  .ct-req { color: var(--ct-cyan); margin-left: 2px; }
+
+  .ct-input {
+    width: 100%;
+    padding: .85rem 1.1rem;
+    border-radius: 14px;
+    border: 1.5px solid var(--ct-border);
+    background: var(--ct-cream);
+    color: var(--ct-ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  [data-theme="dark"] .ct-input {
+    background: rgba(255,255,255,.04);
+    color: #e2e8f0;
+    border-color: var(--ct-border);
+  }
+  .ct-input::placeholder { color: #b0b0c0; }
+  .ct-input:focus {
+    border-color: var(--ct-cyan);
+    box-shadow: 0 0 0 4px rgba(18,179,255,.12);
+    background: #fff;
+  }
+  [data-theme="dark"] .ct-input:focus { background: rgba(255,255,255,.07); }
+  .ct-input.error { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.1); }
+  textarea.ct-input { resize: vertical; min-height: 130px; }
+
+  /* Grid 2 columnas para nombre+email */
+  .ct-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 500px) { .ct-grid-2 { grid-template-columns: 1fr; } }
+
+  /* Botón submit */
+  .ct-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 14px;
+    border: 0;
+    background: linear-gradient(90deg, var(--ct-cyan), var(--ct-violet));
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    cursor: pointer;
+    transition: all .25s ease;
+    position: relative;
+    overflow: hidden;
+    margin-top: .5rem;
+  }
+  .ct-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--ct-violet), var(--ct-cyan));
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .ct-btn:hover::before { opacity: 1; }
+  .ct-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(124,58,237,.3); }
+  .ct-btn span { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: .5rem; }
+
+  /* Errores */
+  .ct-errors {
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .ct-errors ul { margin: 0; padding-left: 1.2rem; }
+  .ct-errors li {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .875rem;
+    color: #ef4444;
+    margin-bottom: .2rem;
+  }
+
+  /* Divisor "o contáctanos por" */
+  .ct-divider {
+    display: flex; align-items: center; gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .ct-divider::before, .ct-divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--ct-border);
+  }
+  .ct-divider span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .75rem;
+    color: #a0a0b0;
+    white-space: nowrap;
+    letter-spacing: .05em;
+  }
+
+  /* Botones alternativos */
+  .ct-alt-btns { display: flex; gap: .75rem; }
+  .ct-alt-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .7rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid var(--ct-border);
+    background: transparent;
+    color: var(--ct-ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .2s ease;
+  }
+  [data-theme="dark"] .ct-alt-btn { color: #d0d0e0; }
+  .ct-alt-btn:hover {
+    border-color: var(--ct-cyan);
+    color: var(--ct-cyan);
+    box-shadow: 0 4px 12px rgba(18,179,255,.12);
+    transform: translateY(-1px);
+  }
+  .ct-alt-btn.wa:hover { border-color: #25d366; color: #25d366; box-shadow: 0 4px 12px rgba(37,211,102,.12); }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="d-flex align-items-start justify-content-center bg-body-tertiary" style="min-height:85vh;padding-top:5vh;">
-  <div class="container" style="max-width:650px;">
-    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-      <div class="w-100" style="height:8px;background:linear-gradient(90deg,#0dcaf0,#6610f2);"></div>
-      <div class="card-body p-4">
-        <div class="text-center mb-3">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
-               style="width:56px;height:56px;background:rgba(13,202,240,.15);">
-            <i class="bi bi-chat-dots-fill fs-4 text-info"></i>
+
+<div class="ct-wrap">
+
+  <!-- ═══════════════ PANEL IZQUIERDO ══════════════ -->
+  <div class="ct-left">
+    <div style="position:relative;z-index:1;">
+
+      <p class="ct-left-label">Estamos aquí para ti</p>
+      <h1 class="ct-left-title">
+        Hablemos<br>sobre tu<br>
+        <em>bienestar</em>
+      </h1>
+      <p class="ct-left-desc">
+        Ya sea que tengas dudas sobre nuestros servicios, quieras reservar
+        una clase o simplemente conocernos — nos encanta escucharte.
+      </p>
+
+      <ul class="ct-info-list">
+        <li class="ct-info-item">
+          <span class="ct-info-ico"><i class="bi bi-geo-alt-fill"></i></span>
+          <div>
+            <div style="font-weight:600;color:#fff;">Dirección</div>
+            <div>Av. Consistorial 2810, Peñalolén</div>
           </div>
-          <h2 class="h3 fw-bold mb-0">Contáctanos</h2>
-          <small class="text-secondary">Te respondemos a la brevedad</small>
-        </div>
-
-        {% if errores %}
-          <div class="alert alert-danger rounded-3 py-2">
-            <ul class="mb-0">
-              {% for e in errores %}<li>{{ e }}</li>{% endfor %}
-            </ul>
+        </li>
+        <li class="ct-info-item">
+          <span class="ct-info-ico"><i class="bi bi-telephone-fill"></i></span>
+          <div>
+            <div style="font-weight:600;color:#fff;">Teléfono</div>
+            <a href="tel:+56912345678">+56 9 1234 5678</a>
           </div>
-        {% endif %}
-
-        <form method="POST" class="mt-2">
-          {% csrf_token %}
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Nombre <span class="text-danger">*</span></label>
-            <input type="text" name="nombre" value="{{ nombre|default:'' }}"
-                   class="form-control rounded-3" placeholder="Tu nombre completo" required>
+        </li>
+        <li class="ct-info-item">
+          <span class="ct-info-ico"><i class="bi bi-envelope-fill"></i></span>
+          <div>
+            <div style="font-weight:600;color:#fff;">Email</div>
+            <a href="mailto:contacto@pilatesreforma.cl">contacto@pilatesreforma.cl</a>
           </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Email <span class="text-danger">*</span></label>
-            <input type="email" name="email" value="{{ email|default:'' }}"
-                   class="form-control rounded-3" placeholder="tu@email.com" required>
+        </li>
+        <li class="ct-info-item">
+          <span class="ct-info-ico"><i class="bi bi-instagram"></i></span>
+          <div>
+            <div style="font-weight:600;color:#fff;">Instagram</div>
+            <a href="https://instagram.com" target="_blank" rel="noopener">@pilatesreforma</a>
           </div>
+        </li>
+      </ul>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Teléfono</label>
-            <input type="text" name="telefono" value="{{ telefono|default:'' }}"
-                   class="form-control rounded-3" placeholder="+56 9 xxxx xxxx">
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Mensaje <span class="text-danger">*</span></label>
-            <textarea name="mensaje" rows="4" class="form-control rounded-3"
-                      placeholder="¿En qué podemos ayudarte?" required>{{ mensaje|default:'' }}</textarea>
-          </div>
-
-          <button type="submit"
-                  class="btn w-100 fw-semibold py-2 rounded-3 text-white"
-                  style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);border:0;">
-            Enviar mensaje
-          </button>
-        </form>
+      <div class="ct-horario">
+        <i class="bi bi-clock"></i>
+        Lun–Vie 07:00–21:00 &nbsp;·&nbsp; Sáb 09:00–14:00
       </div>
     </div>
+
+    <span class="ct-left-bg-text" aria-hidden="true">✉</span>
   </div>
-</section>
+
+  <!-- ═══════════════ PANEL DERECHO (FORM) ═════════ -->
+  <div class="ct-right">
+    <div class="ct-form-wrap">
+
+      <div class="ct-form-header">
+        <h2 class="ct-form-title">Envíanos un mensaje</h2>
+        <p class="ct-form-subtitle">Te respondemos en menos de 24 horas hábiles</p>
+      </div>
+
+      {% if errores %}
+        <div class="ct-errors">
+          <ul>
+            {% for e in errores %}<li>{{ e }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        <div class="ct-grid-2">
+          <div class="ct-field">
+            <label class="ct-label" for="nombre">
+              Nombre <span class="ct-req">*</span>
+            </label>
+            <input type="text" id="nombre" name="nombre"
+                   class="ct-input {% if errores and not nombre %}error{% endif %}"
+                   value="{{ nombre|default:'' }}"
+                   placeholder="Tu nombre"
+                   autocomplete="given-name" required>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="email">
+              Email <span class="ct-req">*</span>
+            </label>
+            <input type="email" id="email" name="email"
+                   class="ct-input {% if errores and not email %}error{% endif %}"
+                   value="{{ email|default:'' }}"
+                   placeholder="tu@email.com"
+                   autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono"
+                 class="ct-input"
+                 value="{{ telefono|default:'' }}"
+                 placeholder="+56 9 xxxx xxxx"
+                 autocomplete="tel">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="mensaje">
+            Mensaje <span class="ct-req">*</span>
+          </label>
+          <textarea id="mensaje" name="mensaje"
+                    class="ct-input {% if errores and not mensaje %}error{% endif %}"
+                    placeholder="¿En qué podemos ayudarte? Cuéntanos tu objetivo o consulta…"
+                    required>{{ mensaje|default:'' }}</textarea>
+        </div>
+
+        <button type="submit" class="ct-btn">
+          <span>
+            <i class="bi bi-send-fill"></i>
+            Enviar mensaje
+          </span>
+        </button>
+
+      </form>
+
+      <div class="ct-divider"><span>o contáctanos directamente por</span></div>
+
+      <div class="ct-alt-btns">
+        <a href="https://wa.me/56912345678" target="_blank" rel="noopener" class="ct-alt-btn wa">
+          <i class="bi bi-whatsapp"></i> WhatsApp
+        </a>
+        <a href="mailto:contacto@pilatesreforma.cl" class="ct-alt-btn">
+          <i class="bi bi-envelope"></i> Email directo
+        </a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="ct-alt-btn">
+          <i class="bi bi-instagram"></i> Instagram
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
 {% endblock %}

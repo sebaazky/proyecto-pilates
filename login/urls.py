@@ -1,52 +1,21 @@
-# login/urls.py
+"""
+login/urls.py
+
+URL privada del administrador — no enlazada en ningún template público.
+El prefijo 'login/' viene de Pilatesreserva/urls.py y se mantiene
+para no levantar sospechas. La ruta real queda:
+
+  /login/pr-gestion-k7x/          → formulario de acceso
+  /login/pr-gestion-k7x/salir/    → cierre de sesión
+
+Nadie debería llegar aquí salvo el administrador que conoce la URL.
+"""
 from django.urls import path
-# ⛔️ Ya no necesitamos importar LogoutView
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from . import views
 
-app_name = "login"
+app_name = 'login'
 
 urlpatterns = [
-    # Login propio
-    path("", views.login_view, name="login"),
-
-    # Logout (POST) – usa TU vista
-    path("logout/", views.logout_view, name="logout"),
-
-    # Registro
-    path("registro/", views.registro_cliente, name="registro_cliente"),
-
-    # ----- Recuperar contraseña -----
-    path(
-        "password_reset/",
-        PasswordResetView.as_view(
-            template_name="login/password_reset_form.html",
-            email_template_name="login/password_reset_email.html",
-            subject_template_name="login/password_reset_subject.txt",
-            success_url="/login/password_reset/done/",
-        ),
-        name="password_reset",
-    ),
-    path(
-        "password_reset/done/",
-        PasswordResetDoneView.as_view(
-            template_name="login/password_reset_done.html",
-        ),
-        name="password_reset_done",
-    ),
-    path(
-        "reset/<uidb64>/<token>/",
-        PasswordResetConfirmView.as_view(
-            template_name="login/password_reset_confirm.html",
-            success_url="/login/reset/complete/",
-        ),
-        name="password_reset_confirm",
-    ),
-    path(
-        "reset/complete/",
-        PasswordResetCompleteView.as_view(
-            template_name="login/password_reset_complete.html",
-        ),
-        name="password_reset_complete",
-    ),
+    path('pr-gestion-k7x/',        views.login_admin,  name='login'),
+    path('pr-gestion-k7x/salir/',  views.logout_admin, name='logout'),
 ]

@@ -1,0 +1,121 @@
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4 p-md-5">
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-3 mb-4">
+            {% for error in form.non_field_errors %}
+              <div><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="POST" novalidate>
+          {% csrf_token %}
+
+          <!-- Datos de acceso -->
+          <p class="fw-bold text-muted small text-uppercase letter-spacing mb-3">
+            <i class="bi bi-person me-1"></i> Datos de acceso
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Nombre de usuario <span class="text-danger">*</span>
+            </label>
+            {{ form.username }}
+            {% for e in form.username.errors %}
+              <div class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle me-1"></i>{{ e }}
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Contraseñas -->
+          <hr class="my-4">
+          <p class="fw-bold text-muted small text-uppercase mb-3">
+            <i class="bi bi-lock me-1"></i>
+            {% if usuario %}Nueva contraseña (dejar vacío para no cambiar){% else %}Contraseña *{% endif %}
+          </p>
+
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold">
+                {% if usuario %}Nueva contraseña{% else %}Contraseña{% endif %}
+              </label>
+              {{ form.password1 }}
+              {% for e in form.password1.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ e }}
+                </div>
+              {% endfor %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold">Confirmar contraseña</label>
+              {{ form.password2 }}
+              {% for e in form.password2.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ e }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Datos personales -->
+          <hr class="my-4">
+          <p class="fw-bold text-muted small text-uppercase mb-3">
+            <i class="bi bi-card-text me-1"></i> Datos personales (opcional)
+          </p>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold">Nombre</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label fw-semibold">Apellido</label>
+              {{ form.last_name }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Email</label>
+            {{ form.email }}
+          </div>
+
+          <!-- Estado activo (solo al editar) -->
+          {% if usuario %}
+          <hr class="my-4">
+          <div class="form-check mb-4">
+            {{ form.is_active }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+              Usuario activo
+            </label>
+            <div class="form-text">Si se desactiva, el usuario no podrá iniciar sesión.</div>
+          </div>
+          {% endif %}
+
+          <!-- Botones -->
+          <div class="d-flex gap-3 pt-2">
+            <button type="submit" class="btn btn-primary rounded-3 px-4">
+              <i class="bi bi-check-lg me-1"></i> {{ accion }}
+            </button>
+            <a href="{% url 'administrador:usuarios_list' %}"
+               class="btn btn-outline-secondary rounded-3 px-4">
+              Cancelar
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

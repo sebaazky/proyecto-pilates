@@ -153,3 +153,8 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 # ─────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+LOGIN_URL = '/login/pr-gestion-k7x/'
+LOGIN_REDIRECT_URL = '/administrador/'
+LOGOUT_REDIRECT_URL = '/login/pr-gestion-k7x/'

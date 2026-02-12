@@ -45,6 +45,18 @@
     .nav-pills .nav-link.active{background:rgba(79,70,229,.15);color:#fff;border:1px solid rgba(79,70,229,.35);}
     .sidebar.collapsed .brand-name,.sidebar.collapsed .nav-title,.sidebar.collapsed .nav-link span.label{display:none;}
     .sidebar.collapsed .nav-link{justify-content:center;}
+
+    /* Badge superadmin en sidebar */
+    .superadmin-badge {
+      display:inline-flex; align-items:center; gap:.35rem;
+      background:rgba(201,168,76,.15); border:1px solid rgba(201,168,76,.3);
+      color:#c9a84c; border-radius:999px;
+      font-size:.65rem; font-weight:600; letter-spacing:.06em;
+      padding:.2rem .55rem; text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .sidebar.collapsed .superadmin-badge { display:none; }
+
     .main{flex:1;display:flex;flex-direction:column;min-width:0;}
     header.appbar{background:var(--surface-2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1010;}
     .appbar .title{font-weight:700;color:var(--text-1);margin:0;}
@@ -63,7 +75,7 @@
 {% with current_name=rm.url_name current_app=rm.app_name %}
 <div class="app">
 
-  <!-- Sidebar -->
+  <!-- ═══════════ SIDEBAR ═══════════ -->
   <aside id="sidebar" class="sidebar">
     <div class="brand">
       <div class="d-flex align-items-center gap-2">
@@ -82,35 +94,44 @@
     </div>
 
     <nav class="nav-section">
-      <p class="nav-title">Principal</p>
-      <ul class="nav nav-pills flex-column gap-1">
 
+      <!-- Badge de rol en sidebar -->
+      <div class="px-3 py-2">
+        {% if request.user.is_superuser %}
+          <span class="superadmin-badge">
+            <i class="bi bi-shield-fill-check"></i> Superadmin
+          </span>
+        {% else %}
+          <span style="font-size:.72rem;color:var(--sb-muted);letter-spacing:.06em;text-transform:uppercase;">
+            <i class="bi bi-person-check me-1"></i>Administrador
+          </span>
+        {% endif %}
+      </div>
+
+      <p class="nav-title mt-2">Principal</p>
+      <ul class="nav nav-pills flex-column gap-1">
         <li class="nav-item">
           <a class="nav-link {% if current_name == 'home' %}active{% endif %}"
              href="{% url 'administrador:home' %}">
             <i class="bi bi-house"></i><span class="label">Inicio</span>
           </a>
         </li>
-
       </ul>
 
       <p class="nav-title mt-3">Contenido</p>
       <ul class="nav nav-pills flex-column gap-1">
-
         <li class="nav-item">
           <a class="nav-link {% if 'servicio' in current_name %}active{% endif %}"
              href="{% url 'administrador:servicios_list' %}">
             <i class="bi bi-grid-3x3-gap"></i><span class="label">Servicios</span>
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link {% if 'blog' in current_name %}active{% endif %}"
              href="{% url 'administrador:blog_list' %}">
             <i class="bi bi-megaphone-fill"></i><span class="label">Blog / Novedades</span>
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link {% if 'mensaje' in current_name %}active{% endif %}"
              href="{% url 'administrador:mensajes_list' %}">
@@ -120,25 +141,48 @@
             {% endif %}
           </a>
         </li>
-
       </ul>
+
+      <!-- ── SECCIÓN SOLO SUPERADMIN ── -->
+      {% if request.user.is_superuser %}
+        <p class="nav-title mt-3">Administración</p>
+        <ul class="nav nav-pills flex-column gap-1">
+          <li class="nav-item">
+            <a class="nav-link {% if 'usuario' in current_name %}active{% endif %}"
+               href="{% url 'administrador:usuarios_list' %}">
+              <i class="bi bi-people-fill"></i>
+              <span class="label">Gestionar Usuarios</span>
+            </a>
+          </li>
+        </ul>
+      {% endif %}
+      <!-- ── FIN SECCIÓN SUPERADMIN ── -->
 
       <hr class="border-secondary-subtle my-3">
 
       <ul class="nav nav-pills flex-column gap-1">
         <li class="nav-item">
+          <a class="nav-link" href="{% url 'index:index' %}" target="_blank">
+            <i class="bi bi-box-arrow-up-right"></i>
+            <span class="label">Ver sitio web</span>
+          </a>
+        </li>
+        <li class="nav-item">
           <form action="{% url 'login:logout' %}" method="post" class="w-100">
             {% csrf_token %}
-            <button type="submit" class="nav-link text-danger w-100 border-0 bg-transparent text-start">
-              <i class="bi bi-box-arrow-right"></i><span class="label">Cerrar sesión</span>
+            <button type="submit"
+                    class="nav-link text-danger w-100 border-0 bg-transparent text-start">
+              <i class="bi bi-box-arrow-right"></i>
+              <span class="label">Cerrar sesión</span>
             </button>
           </form>
         </li>
       </ul>
+
     </nav>
   </aside>
 
-  <!-- Main -->
+  <!-- ═══════════ MAIN ═══════════ -->
   <main class="main">
     <header class="appbar">
       <div class="container-fluid py-3">
@@ -150,14 +194,17 @@
               <i id="themeIcon" class="bi bi-moon-stars"></i>
             </button>
             <span class="badge badge-soft px-3 py-2">
-              <i class="bi bi-person-circle me-1"></i>{{ request.user.get_full_name|default:request.user.username }}
+              <i class="bi bi-person-circle me-1"></i>
+              {{ request.user.get_full_name|default:request.user.username }}
+              {% if request.user.is_superuser %}
+                <i class="bi bi-shield-fill-check ms-1 text-warning"></i>
+              {% endif %}
             </span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Mensajes Django -->
     {% if messages %}
       <div class="container-fluid px-4 pt-3">
         {% for message in messages %}
@@ -181,22 +228,21 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (function(){
-  const root = document.documentElement;
-  const THEME_KEY = 'pr-theme';
-  function setIcon(t){ const i=document.getElementById('themeIcon'); if(i) i.className=(t==='dark')?'bi bi-sun':'bi bi-moon-stars'; }
-  function applyTheme(t){ root.setAttribute('data-theme',t); setIcon(t); }
-  let saved=null; try{saved=localStorage.getItem(THEME_KEY);}catch(e){}
+  const root=document.documentElement, THEME_KEY='pr-theme';
+  function setIcon(t){const i=document.getElementById('themeIcon');if(i)i.className=(t==='dark')?'bi bi-sun':'bi bi-moon-stars';}
+  function applyTheme(t){root.setAttribute('data-theme',t);setIcon(t);}
+  let saved=null;try{saved=localStorage.getItem(THEME_KEY);}catch(e){}
   let theme=saved||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   applyTheme(theme);
   const toggle=document.getElementById('themeToggle');
-  if(toggle){ toggle.addEventListener('click',()=>{ theme=(root.getAttribute('data-theme')==='dark')?'light':'dark'; applyTheme(theme); try{localStorage.setItem(THEME_KEY,theme);}catch(e){} }); }
+  if(toggle){toggle.addEventListener('click',()=>{theme=(root.getAttribute('data-theme')==='dark')?'light':'dark';applyTheme(theme);try{localStorage.setItem(THEME_KEY,theme);}catch(e){}});}
   const sb=document.getElementById('sidebar');
   const btn=document.getElementById('sbToggle');
   const mob=document.getElementById('sbMobile');
   const SB_KEY='sb-collapsed';
-  try{ if(localStorage.getItem(SB_KEY)==='1') sb.classList.add('collapsed'); }catch(e){}
-  if(btn){ btn.addEventListener('click',()=>{ sb.classList.toggle('collapsed'); try{localStorage.setItem(SB_KEY,sb.classList.contains('collapsed')?'1':'0');}catch(e){} }); }
-  if(mob){ mob.addEventListener('click',()=>sb.classList.toggle('off')); }
+  try{if(localStorage.getItem(SB_KEY)==='1')sb.classList.add('collapsed');}catch(e){}
+  if(btn){btn.addEventListener('click',()=>{sb.classList.toggle('collapsed');try{localStorage.setItem(SB_KEY,sb.classList.contains('collapsed')?'1':'0');}catch(e){}});}
+  if(mob){mob.addEventListener('click',()=>sb.classList.toggle('off'));}
 })();
 </script>
 </body>
