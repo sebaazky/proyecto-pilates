@@ -99,62 +99,7 @@
   </div>
 </section>
 
-<!-- SERVICIOS DINÁMICOS — si no hay servicios, no muestra nada -->
-{% if services %}
-<section class="py-5 lp-reveal" id="servicios">
-  <div class="container">
-    <div class="text-center mb-5">
-      <span class="badge rounded-pill mb-2"
-            style="background:rgba(13,202,240,.15);color:var(--bs-info);border:1px solid rgba(13,202,240,.3);">
-        Nuestros Servicios
-      </span>
-      <h2 class="fw-bold" style="color:var(--pr-text);">Lo que ofrecemos</h2>
-      <p class="text-muted">Servicios diseñados para tu bienestar</p>
-    </div>
-    <div class="row g-4 justify-content-center">
-      {% for service in services %}
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
-               style="transition:all .25s ease;"
-               onmouseenter="this.style.transform='translateY(-6px)';this.style.boxShadow='0 1.25rem 2rem rgba(0,0,0,.12)';"
-               onmouseleave="this.style.transform='none';this.style.boxShadow='';">
-            {% if service.image %}
-              <img src="{{ service.image.url }}" class="card-img-top"
-                   style="height:200px;object-fit:cover;" alt="{{ service.name }}">
-            {% else %}
-              <div class="d-flex align-items-center justify-content-center"
-                   style="height:200px;background:linear-gradient(135deg,rgba(13,202,240,.08),rgba(111,66,193,.08));">
-                <i class="bi bi-grid-3x3-gap text-muted fs-1"></i>
-              </div>
-            {% endif %}
-            <div class="card-body p-4">
-              <h5 class="card-title fw-bold" style="color:var(--pr-text);">{{ service.name }}</h5>
-              <p class="card-text text-muted">{{ service.description|truncatechars:100 }}</p>
-              <div class="fw-bold mt-2" style="color:var(--bs-info);font-size:1.1rem;">
-                ${{ service.price|floatformat:0 }} CLP
-              </div>
-            </div>
-            <div class="card-footer bg-transparent border-0 px-4 pb-4">
-              <a href="{% url 'index:contacto_publico' %}"
-                 class="btn w-100 fw-semibold rounded-3 text-white"
-                 style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);border:0;">
-                Consultar
-              </a>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-    <div class="text-center mt-4">
-      <a href="{% url 'index:servicios' %}" class="btn btn-outline-secondary rounded-3 px-4">
-        <i class="bi bi-grid-3x3-gap me-1"></i> Ver todos los servicios
-      </a>
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- CTA SERVICIOS — siempre visible, tenga o no servicios en BD -->
+<!-- CTA SERVICIOS -->
 <section class="py-5 lp-reveal" style="background:var(--pr-soft);">
   <div class="container text-center">
     <span class="badge rounded-pill mb-3"
@@ -169,57 +114,6 @@
     </a>
   </div>
 </section>
-
-<!-- BLOG DINÁMICO — si no hay posts, no muestra nada -->
-{% if blog_posts %}
-<section class="py-5 lp-reveal" id="novedades">
-  <div class="container">
-    <div class="text-center mb-5">
-      <span class="badge rounded-pill mb-2"
-            style="background:rgba(13,202,240,.15);color:var(--bs-info);border:1px solid rgba(13,202,240,.3);">
-        Blog
-      </span>
-      <h2 class="fw-bold" style="color:var(--pr-text);">Últimas Novedades</h2>
-      <p class="text-muted">Artículos y tips para tu bienestar</p>
-    </div>
-    <div class="row g-4">
-      {% for post in blog_posts %}
-        <div class="col-12 col-md-{% if blog_posts|length == 1 %}8 mx-auto{% elif blog_posts|length == 2 %}6{% else %}4{% endif %}">
-          <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
-               style="transition:all .25s ease;"
-               onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 1rem 2rem rgba(0,0,0,.1)';"
-               onmouseleave="this.style.transform='none';this.style.boxShadow='';">
-            {% if post.image %}
-              <img src="{{ post.image.url }}" class="card-img-top"
-                   style="height:180px;object-fit:cover;" alt="{{ post.title }}">
-            {% else %}
-              <div class="d-flex align-items-center justify-content-center"
-                   style="height:180px;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
-                <i class="bi bi-megaphone text-muted fs-1"></i>
-              </div>
-            {% endif %}
-            <div class="card-body p-4">
-              <small class="text-muted">{{ post.published_date|date:"d M Y" }}</small>
-              <h5 class="card-title fw-bold mt-1" style="color:var(--pr-text);">{{ post.title }}</h5>
-              <p class="card-text text-muted">{{ post.get_excerpt }}</p>
-            </div>
-            <div class="card-footer bg-transparent border-0 px-4 pb-4">
-              <a href="{% url 'index:novedades' %}" class="btn btn-outline-secondary rounded-3 w-100">
-                Leer más
-              </a>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-    <div class="text-center mt-4">
-      <a href="{% url 'index:novedades' %}" class="btn btn-outline-secondary rounded-3 px-4">
-        Ver todas las novedades
-      </a>
-    </div>
-  </div>
-</section>
-{% endif %}
 
 <!-- CTA FINAL -->
 <section class="py-5 text-white lp-reveal"

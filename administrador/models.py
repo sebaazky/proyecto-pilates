@@ -72,9 +72,9 @@ class BlogPost(models.Model):
     image = models.ImageField(
         upload_to='blog/',
         verbose_name="Imagen destacada",
-        help_text="Imagen principal de la publicación",
-        blank=True,
-        null=True
+        help_text="Imagen principal de la publicación (obligatoria)",
+        blank=False,  # ← CAMBIO: ahora es obligatoria
+        null=False    # ← CAMBIO: no puede ser NULL
     )
     is_published = models.BooleanField(
         default=True,
@@ -83,7 +83,8 @@ class BlogPost(models.Model):
     )
     published_date = models.DateTimeField(
         default=timezone.now,
-        verbose_name="Fecha de publicación"
+        verbose_name="Fecha de publicación",
+        help_text="Se establece automáticamente al crear/editar"
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -159,3 +160,60 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email} ({self.get_status_display()})"
+
+
+class Instructor(models.Model):
+    """
+    Modelo para gestionar instructores del centro.
+    Se muestran en la sección 'El Equipo' de la landing page.
+    """
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Nombre completo",
+        help_text="Nombre y apellido del instructor"
+    )
+    photo = models.ImageField(
+        upload_to='instructors/',
+        verbose_name="Foto",
+        help_text="Foto profesional del instructor"
+    )
+    specialties = models.CharField(
+        max_length=200,
+        verbose_name="Especialidades",
+        help_text="Ej: Mat & Reformer - Instructora Principal"
+    )
+    bio = models.TextField(
+        verbose_name="Biografía",
+        help_text="Descripción breve del instructor (experiencia, enfoque)"
+    )
+    certifications = models.TextField(
+        blank=True,
+        verbose_name="Certificaciones",
+        help_text="Lista de certificaciones y formación (opcional)"
+    )
+    order = models.IntegerField(
+        default=0,
+        verbose_name="Orden",
+        help_text="Orden de visualización (menor número aparece primero)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Activo",
+        help_text="Si está activo, se muestra en la landing page"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de creación"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Última actualización"
+    )
+
+    class Meta:
+        verbose_name = "Instructor"
+        verbose_name_plural = "Instructores"
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name

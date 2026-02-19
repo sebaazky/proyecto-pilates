@@ -33,6 +33,18 @@ urlpatterns = [
     path('blog/<int:pk>/toggle/',
          views.blog_toggle_publicado, name='blog_toggle'),
 
+    # ── Instructores ───────────────────────────────────────
+    path('instructores/',                    views.instructores_list,
+         name='instructores_list'),
+    path('instructores/crear/',              views.instructor_crear,
+         name='instructor_crear'),
+    path('instructores/<int:pk>/editar/',
+         views.instructor_editar,        name='instructor_editar'),
+    path('instructores/<int:pk>/eliminar/',
+         views.instructor_eliminar,      name='instructor_eliminar'),
+    path('instructores/<int:pk>/toggle/',
+         views.instructor_toggle_activo, name='instructor_toggle'),
+
     # ── Mensajes de Contacto ───────────────────────────────
     path('mensajes/',            views.mensajes_list,    name='mensajes_list'),
     path('mensajes/<int:pk>/',   views.mensaje_detalle,  name='mensaje_detalle'),

@@ -1,10 +1,6 @@
 """
 administrador/views.py
 Panel CMS personalizado.
-
-ROLES:
-  superusuario (is_superuser=True) → accede al panel + gestiona usuarios
-  administrador (rol='administrador') → accede al panel, SIN gestión de usuarios
 """
 from functools import wraps
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,9 +8,10 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.urls import reverse
-from .models import Service, BlogPost, ContactMessage
+from django.utils import timezone
+from .models import Service, BlogPost, ContactMessage, Instructor
 from .forms import (ServiceForm, BlogPostForm,
-                    ContactMessageForm, UsuarioCrearForm, UsuarioEditarForm)
+                    ContactMessageForm, InstructorForm, UsuarioCrearForm, UsuarioEditarForm)
 
 User = get_user_model()
 
@@ -24,50 +21,35 @@ User = get_user_model()
 # ─────────────────────────────────────────────────────────────
 
 def solo_admin(view_func):
-    """
-    Permite acceso a superusuarios Y usuarios con rol='administrador'.
-    No autenticado → login secreto.
-    Autenticado sin permiso → inicio.
-    """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             login_url = reverse('login:login')
             return redirect(f'{login_url}?next={request.path}')
-
         if request.user.is_superuser or getattr(request.user, 'rol', '') == 'administrador':
             return view_func(request, *args, **kwargs)
-
         messages.error(
             request, 'No tienes permiso para acceder a esta sección.')
         return redirect('index:index')
-
     return wrapper
 
 
 def solo_superadmin(view_func):
-    """
-    Solo superusuarios pueden acceder (gestión de usuarios).
-    Un administrador normal que intente entrar → redirige al dashboard con error.
-    """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             login_url = reverse('login:login')
             return redirect(f'{login_url}?next={request.path}')
-
         if request.user.is_superuser:
             return view_func(request, *args, **kwargs)
-
         messages.error(
             request, 'Esta sección es exclusiva del superadministrador.')
         return redirect('administrador:home')
-
     return wrapper
 
 
 # ─────────────────────────────────────────────────────────────
-# CONTEXTO GLOBAL (sidebar)
+# CONTEXTO GLOBAL
 # ─────────────────────────────────────────────────────────────
 
 def get_sidebar_context():
@@ -92,8 +74,7 @@ def home(request):
         'mensajes_recientes':  ContactMessage.objects.order_by('-created_at')[:5],
         'servicios_recientes': Service.objects.order_by('-created_at')[:3],
         'posts_recientes':     BlogPost.objects.order_by('-published_date')[:3],
-        # Para el sidebar
-        'total_admins': User.objects.filter(rol='administrador').count(),
+        'total_admins':        User.objects.filter(rol='administrador').count(),
     }
     return render(request, 'administrador/admin_home.html', context)
 
@@ -188,10 +169,13 @@ def blog_list(request):
 
 @solo_admin
 def blog_crear(request):
+    """Crear publicación — fecha automática."""
     if request.method == 'POST':
         form = BlogPostForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            post = form.save(commit=False)
+            post.published_date = timezone.now()  # ← FECHA AUTOMÁTICA
+            post.save()
             messages.success(request, '✅ Publicación creada correctamente.')
             return redirect('administrador:blog_list')
     else:
@@ -204,11 +188,14 @@ def blog_crear(request):
 
 @solo_admin
 def blog_editar(request, pk):
+    """Editar publicación — actualiza fecha automáticamente."""
     post = get_object_or_404(BlogPost, pk=pk)
     if request.method == 'POST':
         form = BlogPostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
-            form.save()
+            post = form.save(commit=False)
+            post.published_date = timezone.now()  # ← ACTUALIZA FECHA AUTOMÁTICAMENTE
+            post.save()
             messages.success(
                 request, '✅ Publicación actualizada correctamente.')
             return redirect('administrador:blog_list')
@@ -282,24 +269,94 @@ def mensaje_detalle(request, pk):
 
 
 # ─────────────────────────────────────────────────────────────
+# INSTRUCTORES
+# ─────────────────────────────────────────────────────────────
+
+@solo_admin
+def instructores_list(request):
+    q = request.GET.get('q', '').strip()
+    instructores = Instructor.objects.all()
+    if q:
+        instructores = instructores.filter(
+            Q(name__icontains=q) | Q(specialties__icontains=q))
+    return render(request, 'administrador/instructores/list.html', {
+        'instructores': instructores, 'q': q, **get_sidebar_context()
+    })
+
+
+@solo_admin
+def instructor_crear(request):
+    if request.method == 'POST':
+        form = InstructorForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Instructor creado correctamente.')
+            return redirect('administrador:instructores_list')
+    else:
+        form = InstructorForm()
+    return render(request, 'administrador/instructores/form.html', {
+        'form': form, 'titulo': 'Nuevo Instructor',
+        'accion': 'Crear', **get_sidebar_context()
+    })
+
+
+@solo_admin
+def instructor_editar(request, pk):
+    instructor = get_object_or_404(Instructor, pk=pk)
+    if request.method == 'POST':
+        form = InstructorForm(request.POST, request.FILES, instance=instructor)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request, '✅ Instructor actualizado correctamente.')
+            return redirect('administrador:instructores_list')
+    else:
+        form = InstructorForm(instance=instructor)
+    return render(request, 'administrador/instructores/form.html', {
+        'form': form, 'instructor': instructor,
+        'titulo': 'Editar Instructor', 'accion': 'Guardar cambios',
+        **get_sidebar_context()
+    })
+
+
+@solo_admin
+def instructor_eliminar(request, pk):
+    instructor = get_object_or_404(Instructor, pk=pk)
+    if request.method == 'POST':
+        nombre = instructor.name
+        instructor.delete()
+        messages.success(request, f'🗑️ Instructor "{nombre}" eliminado.')
+        return redirect('administrador:instructores_list')
+    return render(request, 'administrador/instructores/confirmar_eliminar.html', {
+        'instructor': instructor, **get_sidebar_context()
+    })
+
+
+@solo_admin
+def instructor_toggle_activo(request, pk):
+    instructor = get_object_or_404(Instructor, pk=pk)
+    instructor.is_active = not instructor.is_active
+    instructor.save()
+    estado = 'activado' if instructor.is_active else 'desactivado'
+    messages.success(request, f'✅ Instructor "{instructor.name}" {estado}.')
+    return redirect('administrador:instructores_list')
+
+
+# ─────────────────────────────────────────────────────────────
 # USUARIOS — solo superadmin
 # ─────────────────────────────────────────────────────────────
 
 @solo_superadmin
 def usuarios_list(request):
-    """Lista todos los usuarios administradores."""
     usuarios = User.objects.filter(
-        rol='administrador', is_superuser=False
-    ).order_by('username')
+        rol='administrador', is_superuser=False).order_by('username')
     return render(request, 'administrador/usuarios/list.html', {
-        'usuarios': usuarios,
-        **get_sidebar_context()
+        'usuarios': usuarios, **get_sidebar_context()
     })
 
 
 @solo_superadmin
 def usuario_crear(request):
-    """Crea un nuevo usuario administrador con contraseña hasheada."""
     if request.method == 'POST':
         form = UsuarioCrearForm(request.POST)
         if form.is_valid():
@@ -310,16 +367,13 @@ def usuario_crear(request):
     else:
         form = UsuarioCrearForm()
     return render(request, 'administrador/usuarios/form.html', {
-        'form': form,
-        'titulo': 'Crear Usuario Administrador',
-        'accion': 'Crear usuario',
-        **get_sidebar_context()
+        'form': form, 'titulo': 'Crear Usuario Administrador',
+        'accion': 'Crear usuario', **get_sidebar_context()
     })
 
 
 @solo_superadmin
 def usuario_editar(request, pk):
-    """Edita un usuario existente. Contraseña opcional."""
     usuario = get_object_or_404(User, pk=pk, is_superuser=False)
     if request.method == 'POST':
         form = UsuarioEditarForm(request.POST, instance=usuario)
@@ -331,30 +385,23 @@ def usuario_editar(request, pk):
     else:
         form = UsuarioEditarForm(instance=usuario)
     return render(request, 'administrador/usuarios/form.html', {
-        'form': form,
-        'usuario': usuario,
+        'form': form, 'usuario': usuario,
         'titulo': f'Editar — {usuario.username}',
-        'accion': 'Guardar cambios',
-        **get_sidebar_context()
+        'accion': 'Guardar cambios', **get_sidebar_context()
     })
 
 
 @solo_superadmin
 def usuario_eliminar(request, pk):
-    """Elimina un usuario con confirmación. No puede eliminarse a sí mismo."""
     usuario = get_object_or_404(User, pk=pk, is_superuser=False)
-
     if usuario == request.user:
         messages.error(request, 'No puedes eliminar tu propia cuenta.')
         return redirect('administrador:usuarios_list')
-
     if request.method == 'POST':
         username = usuario.username
         usuario.delete()
         messages.success(request, f'🗑️ Usuario "{username}" eliminado.')
         return redirect('administrador:usuarios_list')
-
     return render(request, 'administrador/usuarios/confirmar_eliminar.html', {
-        'usuario': usuario,
-        **get_sidebar_context()
+        'usuario': usuario, **get_sidebar_context()
     })

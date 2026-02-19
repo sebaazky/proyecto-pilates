@@ -1,5 +1,5 @@
 {% extends 'administrador/base_admin.html' %}
-{% block titulo %}Servicios – Panel Admin{% endblock %}
+{% block titulo %}Servicios — Panel Admin{% endblock %}
 {% block encabezado %}Servicios{% endblock %}
 
 {% block content %}
@@ -69,8 +69,7 @@
               <i class="bi {% if s.is_active %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
             </a>
             <a href="{% url 'administrador:servicio_eliminar' s.pk %}"
-               class="btn btn-sm btn-outline-danger"
-               onclick="return confirm('¿Seguro que deseas eliminar este servicio?')">
+               class="btn btn-sm btn-outline-danger">
               <i class="bi bi-trash3"></i>
             </a>
           </div>

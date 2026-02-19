@@ -3,6 +3,8 @@
 
 {% block extra_head %}
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- intl-tel-input CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.12/build/css/intlTelInput.css">
 <style>
   :root {
     --ct-ink:    #0a0a0f;
@@ -20,7 +22,7 @@
     --ct-border: #1e2030;
   }
 
-  /* ── LAYOUT ───────────────────────────────────── */
+  /* ── LAYOUT ──────────────────────────────────────────── */
   .ct-wrap {
     min-height: calc(100vh - 120px);
     display: grid;
@@ -31,7 +33,7 @@
     .ct-left  { display: none; }
   }
 
-  /* ── PANEL IZQUIERDO (oscuro + decorativo) ────── */
+  /* ── PANEL IZQUIERDO (oscuro + decorativo) ────────────── */
   .ct-left {
     background: var(--ct-ink);
     color: #fff;
@@ -122,7 +124,7 @@
     margin-top: 2rem;
   }
 
-  /* ── PANEL DERECHO (formulario) ───────────────── */
+  /* ── PANEL DERECHO (formulario) ────────────────────────── */
   .ct-right {
     background: var(--ct-cream);
     display: flex;
@@ -228,20 +230,15 @@
   .ct-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(124,58,237,.3); }
   .ct-btn span { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: .5rem; }
 
-  /* Errores */
-  .ct-errors {
-    background: rgba(239,68,68,.08);
-    border: 1px solid rgba(239,68,68,.2);
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-  }
-  .ct-errors ul { margin: 0; padding-left: 1.2rem; }
-  .ct-errors li {
+  /* Errores de Django */
+  .ct-error-field {
     font-family: 'DM Sans', sans-serif;
-    font-size: .875rem;
+    font-size: .8rem;
     color: #ef4444;
-    margin-bottom: .2rem;
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
   }
 
   /* Divisor "o contáctanos por" */
@@ -284,6 +281,42 @@
     transform: translateY(-1px);
   }
   .ct-alt-btn.wa:hover { border-color: #25d366; color: #25d366; box-shadow: 0 4px 12px rgba(37,211,102,.12); }
+
+  /* ── intl-tel-input custom styles ────────────────────── */
+  .iti { width: 100%; }
+  .iti__input {
+    width: 100% !important;
+    padding: .85rem 1.1rem .85rem 3.5rem !important;
+    border-radius: 14px !important;
+    border: 1.5px solid var(--ct-border) !important;
+    background: var(--ct-cream) !important;
+    color: var(--ct-ink) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: .95rem !important;
+  }
+  [data-theme="dark"] .iti__input {
+    background: rgba(255,255,255,.04) !important;
+    color: #e2e8f0 !important;
+    border-color: var(--ct-border) !important;
+  }
+  .iti__input:focus {
+    border-color: var(--ct-cyan) !important;
+    box-shadow: 0 0 0 4px rgba(18,179,255,.12) !important;
+    background: #fff !important;
+  }
+  [data-theme="dark"] .iti__input:focus { background: rgba(255,255,255,.07) !important; }
+  
+  .iti__country-list {
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15) !important;
+    border: 1px solid var(--ct-border) !important;
+    background: var(--ct-cream) !important;
+  }
+  [data-theme="dark"] .iti__country-list {
+    background: var(--ct-mist) !important;
+  }
+  .iti__country:hover { background: rgba(18,179,255,.08) !important; }
+  .iti__selected-country { border-radius: 14px 0 0 14px !important; }
 </style>
 {% endblock %}
 
@@ -291,7 +324,7 @@
 
 <div class="ct-wrap">
 
-  <!-- ═══════════════ PANEL IZQUIERDO ══════════════ -->
+  <!-- ═══════════════ PANEL IZQUIERDO ═══════════════ -->
   <div class="ct-left">
     <div style="position:relative;z-index:1;">
 
@@ -345,7 +378,7 @@
     <span class="ct-left-bg-text" aria-hidden="true">✉</span>
   </div>
 
-  <!-- ═══════════════ PANEL DERECHO (FORM) ═════════ -->
+  <!-- ═══════════════ PANEL DERECHO (FORM) ═══════════ -->
   <div class="ct-right">
     <div class="ct-form-wrap">
 
@@ -354,57 +387,83 @@
         <p class="ct-form-subtitle">Te respondemos en menos de 24 horas hábiles</p>
       </div>
 
-      {% if errores %}
-        <div class="ct-errors">
-          <ul>
-            {% for e in errores %}<li>{{ e }}</li>{% endfor %}
-          </ul>
-        </div>
-      {% endif %}
-
-      <form method="POST" novalidate>
+      <form method="POST" novalidate id="contactForm">
         {% csrf_token %}
 
         <div class="ct-grid-2">
+          <!-- NOMBRE con validación solo letras -->
           <div class="ct-field">
-            <label class="ct-label" for="nombre">
+            <label class="ct-label" for="{{ form.nombre.id_for_label }}">
               Nombre <span class="ct-req">*</span>
             </label>
-            <input type="text" id="nombre" name="nombre"
-                   class="ct-input {% if errores and not nombre %}error{% endif %}"
-                   value="{{ nombre|default:'' }}"
+            <input type="text" 
+                   id="{{ form.nombre.id_for_label }}" 
+                   name="nombre"
+                   class="ct-input {% if form.nombre.errors %}error{% endif %}"
+                   value="{{ form.nombre.value|default:'' }}"
                    placeholder="Tu nombre"
-                   autocomplete="given-name" required>
+                   autocomplete="given-name"
+                   oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-]/g, '')"
+                   required>
+            {% for error in form.nombre.errors %}
+              <div class="ct-error-field">
+                <i class="bi bi-exclamation-circle"></i>{{ error }}
+              </div>
+            {% endfor %}
           </div>
+
+          <!-- EMAIL -->
           <div class="ct-field">
-            <label class="ct-label" for="email">
+            <label class="ct-label" for="{{ form.correo.id_for_label }}">
               Email <span class="ct-req">*</span>
             </label>
-            <input type="email" id="email" name="email"
-                   class="ct-input {% if errores and not email %}error{% endif %}"
-                   value="{{ email|default:'' }}"
+            <input type="email" 
+                   id="{{ form.correo.id_for_label }}" 
+                   name="correo"
+                   class="ct-input {% if form.correo.errors %}error{% endif %}"
+                   value="{{ form.correo.value|default:'' }}"
                    placeholder="tu@email.com"
-                   autocomplete="email" required>
+                   autocomplete="email" 
+                   required>
+            {% for error in form.correo.errors %}
+              <div class="ct-error-field">
+                <i class="bi bi-exclamation-circle"></i>{{ error }}
+              </div>
+            {% endfor %}
           </div>
         </div>
 
+        <!-- TELÉFONO con intl-tel-input -->
         <div class="ct-field">
-          <label class="ct-label" for="telefono">Teléfono</label>
-          <input type="tel" id="telefono" name="telefono"
+          <label class="ct-label" for="{{ form.telefono.id_for_label }}">Teléfono</label>
+          <input type="tel" 
+                 id="{{ form.telefono.id_for_label }}" 
+                 name="telefono"
                  class="ct-input"
-                 value="{{ telefono|default:'' }}"
-                 placeholder="+56 9 xxxx xxxx"
+                 value="{{ form.telefono.value|default:'' }}"
                  autocomplete="tel">
+          {% for error in form.telefono.errors %}
+            <div class="ct-error-field">
+              <i class="bi bi-exclamation-circle"></i>{{ error }}
+            </div>
+          {% endfor %}
         </div>
 
+        <!-- MENSAJE -->
         <div class="ct-field">
-          <label class="ct-label" for="mensaje">
+          <label class="ct-label" for="{{ form.mensaje.id_for_label }}">
             Mensaje <span class="ct-req">*</span>
           </label>
-          <textarea id="mensaje" name="mensaje"
-                    class="ct-input {% if errores and not mensaje %}error{% endif %}"
+          <textarea id="{{ form.mensaje.id_for_label }}" 
+                    name="mensaje"
+                    class="ct-input {% if form.mensaje.errors %}error{% endif %}"
                     placeholder="¿En qué podemos ayudarte? Cuéntanos tu objetivo o consulta…"
-                    required>{{ mensaje|default:'' }}</textarea>
+                    required>{{ form.mensaje.value|default:'' }}</textarea>
+          {% for error in form.mensaje.errors %}
+            <div class="ct-error-field">
+              <i class="bi bi-exclamation-circle"></i>{{ error }}
+            </div>
+          {% endfor %}
         </div>
 
         <button type="submit" class="ct-btn">
@@ -434,5 +493,107 @@
   </div>
 
 </div>
+
+<!-- intl-tel-input JS -->
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.12/build/js/intlTelInput.min.js"></script>
+<script>
+  // Inicializar intl-tel-input en el campo de teléfono
+  const input = document.querySelector("#{{ form.telefono.id_for_label }}");
+  const iti = window.intlTelInput(input, {
+    initialCountry: "cl",
+    preferredCountries: ["cl", "ar", "pe", "mx", "us"],
+    separateDialCode: true,
+    strictMode: true,  // ← Modo estricto para validación más rigurosa
+    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.0.12/build/js/utils.js"
+  });
+
+  // Función para mostrar/ocultar error
+  function showError(message) {
+    input.classList.add('error');
+    let errorDiv = input.parentElement.querySelector('.ct-error-field');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.className = 'ct-error-field';
+      input.parentElement.appendChild(errorDiv);
+    }
+    errorDiv.innerHTML = `<i class="bi bi-exclamation-circle"></i>${message}`;
+  }
+
+  function hideError() {
+    input.classList.remove('error');
+    const errorDiv = input.parentElement.querySelector('.ct-error-field');
+    if (errorDiv) errorDiv.remove();
+  }
+
+  // Validar al enviar el formulario
+  const form = document.getElementById('contactForm');
+  form.addEventListener('submit', function(e) {
+    const phoneValue = input.value.trim();
+    
+    // Si el campo tiene contenido, validar
+    if (phoneValue) {
+      const isValid = iti.isValidNumber();
+      const errorCode = iti.getValidationError();
+      
+      if (!isValid) {
+        e.preventDefault();
+        
+        // Mensajes de error específicos según el tipo de problema
+        let errorMsg = 'Número de teléfono inválido';
+        if (errorCode === 1) errorMsg = 'Código de país inválido';
+        else if (errorCode === 2) errorMsg = 'Número demasiado corto';
+        else if (errorCode === 3) errorMsg = 'Número demasiado largo';
+        else if (errorCode === 4) errorMsg = 'Número inválido';
+        
+        showError(errorMsg);
+        return false;
+      }
+    }
+    
+    // Todo OK
+    hideError();
+  });
+
+  // Validación en tiempo real mientras escribe
+  input.addEventListener('blur', function() {
+    const phoneValue = this.value.trim();
+    
+    if (phoneValue) {
+      const isValid = iti.isValidNumber();
+      if (!isValid) {
+        const errorCode = iti.getValidationError();
+        let errorMsg = 'Número inválido';
+        if (errorCode === 2) errorMsg = 'Número muy corto';
+        else if (errorCode === 3) errorMsg = 'Número muy largo';
+        showError(errorMsg);
+      } else {
+        hideError();
+      }
+    } else {
+      hideError();
+    }
+  });
+
+  // Remover error al escribir
+  input.addEventListener('input', function() {
+    // Solo quitar el error, no validar aún (esperar blur o submit)
+    if (this.value.trim().length > 3) {
+      hideError();
+    }
+  });
+
+  // VALIDACIÓN EN TIEMPO REAL: solo números, espacios, guiones, paréntesis y +
+  input.addEventListener('input', function(e) {
+    // Permitir solo: números, espacios, +, -, (, )
+    this.value = this.value.replace(/[^0-9\s\+\-\(\)]/g, '');
+  });
+
+  // También al pegar
+  input.addEventListener('paste', function(e) {
+    setTimeout(() => {
+      this.value = this.value.replace(/[^0-9\s\+\-\(\)]/g, '');
+    }, 10);
+  });
+</script>
 
 {% endblock %}

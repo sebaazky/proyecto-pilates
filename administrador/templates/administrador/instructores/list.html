@@ -1,0 +1,92 @@
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}Instructores — Panel Admin{% endblock %}
+{% block encabezado %}Instructores{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="rounded-4 p-4 mb-4 text-white"
+     style="background:linear-gradient(90deg,#c9a84c 0%,#d4af37 100%);">
+  <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+    <div>
+      <h1 class="h4 fw-bold mb-1"><i class="bi bi-person-badge me-2"></i>Equipo de Instructores</h1>
+      <p class="mb-0 opacity-75">{{ instructores|length }} instructor{{ instructores|length|pluralize:"es" }} registrado{{ instructores|length|pluralize:"s" }}</p>
+    </div>
+    <a href="{% url 'administrador:instructor_crear' %}" class="btn btn-light text-warning fw-semibold">
+      <i class="bi bi-plus-lg me-1"></i> Nuevo Instructor
+    </a>
+  </div>
+</div>
+
+<!-- Buscador -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" class="d-flex gap-2">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="search" name="q" value="{{ q }}" class="form-control"
+               placeholder="Buscar instructores…">
+      </div>
+      <button class="btn btn-warning px-4" type="submit">Buscar</button>
+      {% if q %}<a href="{% url 'administrador:instructores_list' %}" class="btn btn-outline-secondary">Limpiar</a>{% endif %}
+    </form>
+  </div>
+</div>
+
+{% if instructores %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    {% for i in instructores %}
+      <div class="col">
+        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+          {% if i.photo %}
+            <img src="{{ i.photo.url }}" class="card-img-top" 
+                 style="height:250px;object-fit:cover;" alt="{{ i.name }}">
+          {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-light"
+                 style="height:250px;">
+              <i class="bi bi-person fs-1 text-muted"></i>
+            </div>
+          {% endif %}
+
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h5 class="card-title fw-bold mb-0">{{ i.name }}</h5>
+              <span class="badge rounded-pill {% if i.is_active %}bg-success{% else %}bg-secondary{% endif %} ms-2">
+                {% if i.is_active %}Activo{% else %}Inactivo{% endif %}
+              </span>
+            </div>
+            <p class="text-warning small fw-semibold mb-2">{{ i.specialties }}</p>
+            <p class="card-text text-muted small">{{ i.bio|truncatechars:100 }}</p>
+          </div>
+
+          <div class="card-footer bg-transparent border-0 d-flex gap-2 px-3 pb-3">
+            <a href="{% url 'administrador:instructor_editar' i.pk %}"
+               class="btn btn-sm btn-outline-warning flex-fill">
+              <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a href="{% url 'administrador:instructor_toggle' i.pk %}"
+               class="btn btn-sm {% if i.is_active %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+              <i class="bi {% if i.is_active %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+            </a>
+            <a href="{% url 'administrador:instructor_eliminar' i.pk %}"
+               class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-trash3"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+      <h5 class="text-muted">No hay instructores registrados</h5>
+      <a href="{% url 'administrador:instructor_crear' %}" class="btn btn-warning mt-3">
+        <i class="bi bi-plus-lg me-1"></i> Crear primer instructor
+      </a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

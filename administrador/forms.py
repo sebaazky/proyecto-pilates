@@ -4,7 +4,7 @@ Formularios para el panel de administración CMS.
 """
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Service, BlogPost, ContactMessage
+from .models import Service, BlogPost, ContactMessage, Instructor
 
 User = get_user_model()
 
@@ -17,21 +17,26 @@ class ServiceForm(forms.ModelForm):
         widgets = {
             'name':        forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'price':       forms.NumberInput(attrs={'class': 'form-control'}),
+            'price':       forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'order':       forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_price(self):
+        """Validar que el precio sea mayor a 0."""
+        price = self.cleaned_data.get('price')
+        if price is not None and price <= 0:
+            raise forms.ValidationError('El precio debe ser mayor a $0.')
+        return price
 
 
 class BlogPostForm(forms.ModelForm):
     class Meta:
         model = BlogPost
-        fields = ['title', 'content', 'image',
-                  'is_published', 'published_date']
+        # ← CAMBIO: published_date eliminado de fields, se maneja automáticamente
+        fields = ['title', 'content', 'image', 'is_published']
         widgets = {
-            'title':          forms.TextInput(attrs={'class': 'form-control'}),
-            'content':        forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
-            'published_date': forms.DateTimeInput(
-                attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'title':   forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
         }
 
 
@@ -45,6 +50,20 @@ class ContactMessageForm(forms.ModelForm):
         }
 
 
+class InstructorForm(forms.ModelForm):
+    class Meta:
+        model = Instructor
+        fields = ['name', 'photo', 'specialties', 'bio',
+                  'certifications', 'order', 'is_active']
+        widgets = {
+            'name':           forms.TextInput(attrs={'class': 'form-control'}),
+            'specialties':    forms.TextInput(attrs={'class': 'form-control'}),
+            'bio':            forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'certifications': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'order':          forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+
 # ─────────────────────────────────────────────────────────────
 # FORMULARIOS DE USUARIO — solo para superadmin
 # ─────────────────────────────────────────────────────────────
@@ -53,13 +72,17 @@ class UsuarioCrearForm(forms.ModelForm):
     """Crea un nuevo usuario administrador con contraseña hasheada."""
     password1 = forms.CharField(
         label='Contraseña',
-        widget=forms.PasswordInput(
-            attrs={'class': 'form-control', 'placeholder': 'Mínimo 8 caracteres'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Mínimo 8 caracteres'
+        }),
     )
     password2 = forms.CharField(
         label='Confirmar contraseña',
-        widget=forms.PasswordInput(
-            attrs={'class': 'form-control', 'placeholder': 'Repite la contraseña'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Repite la contraseña'
+        }),
     )
 
     class Meta:
@@ -92,7 +115,6 @@ class UsuarioCrearForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        # ← hashea correctamente
         user.set_password(self.cleaned_data['password1'])
         user.rol = 'administrador'
         user.is_active = True
@@ -154,7 +176,7 @@ class UsuarioEditarForm(forms.ModelForm):
         user = super().save(commit=False)
         p1 = self.cleaned_data.get('password1')
         if p1:
-            user.set_password(p1)   # solo cambia si se ingresó algo
+            user.set_password(p1)
         if commit:
             user.save()
         return user

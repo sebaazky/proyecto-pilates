@@ -1,5 +1,5 @@
 {% extends 'administrador/base_admin.html' %}
-{% block titulo %}Blog – Panel Admin{% endblock %}
+{% block titulo %}Blog — Panel Admin{% endblock %}
 {% block encabezado %}Blog / Novedades{% endblock %}
 
 {% block content %}
@@ -65,8 +65,7 @@
                       <i class="bi {% if post.is_published %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
                     </a>
                     <a href="{% url 'administrador:blog_eliminar' post.pk %}"
-                       class="btn btn-sm btn-outline-danger"
-                       onclick="return confirm('¿Seguro que deseas eliminar esta publicación?')">
+                       class="btn btn-sm btn-outline-danger">
                       <i class="bi bi-trash3"></i>
                     </a>
                   </div>

@@ -574,6 +574,7 @@
 <!-- ═══════════════════════════════════════════════
      EQUIPO
 ════════════════════════════════════════════════ -->
+{% if instructores %}
 <section class="py-5" style="background:var(--n-mist);">
   <div class="container py-3">
     <div class="text-center mb-5 ns-reveal">
@@ -583,39 +584,28 @@
       </h2>
     </div>
     <div class="row g-4">
-      <div class="col-12 col-md-4 ns-reveal ns-reveal-d1">
-        <div class="ns-instructor">
-          <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=85" alt="María González">
-          <div class="ns-instructor-info">
-            <div class="ns-instructor-name">María González</div>
-            <div class="ns-instructor-role">Mat & Reformer · Instructora Principal</div>
-            <div class="ns-instructor-bio">Certificada por Balanced Body. 8 años transformando cuerpos en Santiago.</div>
+      {% for instructor in instructores %}
+        <div class="col-12 col-md-{% if instructores|length == 1 %}8 mx-auto{% elif instructores|length == 2 %}6{% else %}4{% endif %} ns-reveal ns-reveal-d{{ forloop.counter }}">
+          <div class="ns-instructor">
+            {% if instructor.photo %}
+              <img src="{{ instructor.photo.url }}" alt="{{ instructor.name }}">
+            {% else %}
+              <div style="width:100%;aspect-ratio:3/4;background:#f3f4f6;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-person fs-1 text-muted"></i>
+              </div>
+            {% endif %}
+            <div class="ns-instructor-info">
+              <div class="ns-instructor-name">{{ instructor.name }}</div>
+              <div class="ns-instructor-role">{{ instructor.specialties }}</div>
+              <div class="ns-instructor-bio">{{ instructor.bio|truncatewords:20 }}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-12 col-md-4 ns-reveal ns-reveal-d2">
-        <div class="ns-instructor">
-          <img src="https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?w=600&q=85" alt="Carlos Vidal">
-          <div class="ns-instructor-info">
-            <div class="ns-instructor-name">Carlos Vidal</div>
-            <div class="ns-instructor-role">Reformer & Grupal · Kinesiólogo</div>
-            <div class="ns-instructor-bio">STOTT Pilates certified. Especialista en rendimiento deportivo y rehabilitación.</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-4 ns-reveal ns-reveal-d3">
-        <div class="ns-instructor">
-          <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=85" alt="Ana Riquelme">
-          <div class="ns-instructor-info">
-            <div class="ns-instructor-name">Ana Riquelme</div>
-            <div class="ns-instructor-role">Mat & Rehabilitación · Instructora</div>
-            <div class="ns-instructor-bio">Especialista en Pilates terapéutico, postparto y atención personalizada.</div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- ═══════════════════════════════════════════════
      CTA FINAL

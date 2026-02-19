@@ -1,73 +1,85 @@
 # index/forms.py
 from django import forms
-from .models import Contacto  # Usa el modelo Contacto de la app index
-from .models import NewsPost
-from django.utils import timezone
+from django.core.exceptions import ValidationError
+import re
 
 
-class ContactoPublicoForm(forms.ModelForm):
-    class Meta:
-        model = Contacto
-        fields = ["nombre", "correo", "telefono", "mensaje"]
-        widgets = {
-            "nombre": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Tu nombre"}
-            ),
-            "correo": forms.EmailInput(
-                attrs={"class": "form-control", "placeholder": "Tu correo"}
-            ),
-            "telefono": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Tu teléfono"}
-            ),
-            "mensaje": forms.Textarea(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Escribe tu mensaje aquí",
-                    "rows": 5,
-                }
-            ),
-        }
+class ContactoPublicoForm(forms.Form):
+    """
+    Formulario de contacto público.
+    No usa ModelForm porque el modelo ContactMessage está en la app administrador.
+    """
+    nombre = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tu nombre',
+            'pattern': '[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+',
+            'title': 'Solo letras permitidas',
+        })
+    )
 
+    correo = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tu correo',
+        })
+    )
 
-class NewsPostForm(forms.ModelForm):
-    class Meta:
-        model = NewsPost
-        fields = ["title", "tag", "image", "excerpt",
-                  "body", "published", "featured"]
-        widgets = {
-            "title": forms.TextInput(attrs={
-                "class": "form-control",
-                "placeholder": "Título",
-            }),
-            "tag": forms.Select(attrs={
-                "class": "form-select",
-            }),
-            "image": forms.ClearableFileInput(attrs={
-                "class": "form-control",
-            }),
-            "excerpt": forms.Textarea(attrs={
-                "class": "form-control",
-                "rows": 2,
-                "placeholder": "Resumen corto…",
-            }),
-            "body": forms.Textarea(attrs={
-                "class": "form-control",
-                "rows": 8,
-                "placeholder": "Contenido (HTML simple permitido)",
-            }),
-            "published": forms.CheckboxInput(attrs={
-                "class": "form-check-input",
-            }),
-            "featured": forms.CheckboxInput(attrs={
-                "class": "form-check-input",
-            }),
-        }
+    telefono = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Tu teléfono',
+            'type': 'tel',
+        })
+    )
 
-    def save(self, commit=True):
-        obj = super().save(commit=False)
-        # Si se marca “publicado” y no hay fecha, la seteamos
-        if obj.published and not obj.published_at:
-            obj.published_at = timezone.now()
-        if commit:
-            obj.save()
-        return obj
+    mensaje = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Escribe tu mensaje aquí',
+            'rows': 5,
+        })
+    )
+
+    def clean_nombre(self):
+        """Validar que el nombre solo contenga letras y espacios."""
+        nombre = self.cleaned_data.get('nombre', '').strip()
+
+        if not nombre:
+            raise ValidationError('El nombre es obligatorio.')
+
+        # Solo letras (incluyendo acentos), espacios y guiones
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-]+$', nombre):
+            raise ValidationError('El nombre solo puede contener letras.')
+
+        # Mínimo 2 caracteres
+        if len(nombre) < 2:
+            raise ValidationError(
+                'El nombre debe tener al menos 2 caracteres.')
+
+        return nombre
+
+    def clean_telefono(self):
+        """Validar formato de teléfono."""
+        telefono = self.cleaned_data.get('telefono', '').strip()
+
+        # Teléfono es opcional, si está vacío lo aceptamos
+        if not telefono:
+            return telefono
+
+        # Remover espacios, guiones y paréntesis para validar
+        telefono_limpio = re.sub(r'[\s\-\(\)\+]', '', telefono)
+
+        # Verificar que solo contenga dígitos después de limpiar
+        if not telefono_limpio.isdigit():
+            raise ValidationError('El teléfono solo puede contener números.')
+
+        # Verificar longitud (entre 8 y 15 dígitos es razonable)
+        if len(telefono_limpio) < 8 or len(telefono_limpio) > 15:
+            raise ValidationError(
+                'El teléfono debe tener entre 8 y 15 dígitos.')
+
+        return telefono

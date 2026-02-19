@@ -1,5 +1,5 @@
 {% extends 'administrador/base_admin.html' %}
-{% block titulo %}{{ titulo }} – Panel Admin{% endblock %}
+{% block titulo %}{{ titulo }} — Panel Admin{% endblock %}
 {% block encabezado %}{{ titulo }}{% endblock %}
 
 {% block content %}
@@ -26,17 +26,23 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
             {{ form.title }}
-            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+            {% if form.title.errors %}
+              <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+            {% endif %}
           </div>
 
           <div class="mb-3">
             <label class="form-label fw-semibold">Contenido <span class="text-danger">*</span></label>
             {{ form.content }}
-            {% if form.content.errors %}<div class="text-danger small mt-1">{{ form.content.errors }}</div>{% endif %}
+            {% if form.content.errors %}
+              <div class="text-danger small mt-1">{{ form.content.errors }}</div>
+            {% endif %}
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-semibold">Imagen destacada</label>
+            <label class="form-label fw-semibold">
+              Imagen destacada <span class="text-danger">*</span>
+            </label>
             {% if post.image %}
               <div class="mb-2">
                 <img src="{{ post.image.url }}" class="img-thumbnail" style="max-height:150px;" alt="Imagen actual">
@@ -44,11 +50,19 @@
               </div>
             {% endif %}
             {{ form.image }}
+            {% if form.image.errors %}
+              <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+            {% endif %}
+            <div class="form-text">La imagen es obligatoria y se mostrará como portada de la publicación.</div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Fecha de publicación</label>
-            {{ form.published_date }}
+          <!-- FECHA AUTOMÁTICA - Info para el usuario -->
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+            <i class="bi bi-info-circle mt-1"></i>
+            <div>
+              <strong>Fecha de publicación:</strong> Se establece automáticamente al guardar.
+              {% if post %}La fecha actual es {{ post.published_date|date:"d/m/Y H:i" }}{% endif %}
+            </div>
           </div>
 
           <div class="mb-4">

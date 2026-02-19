@@ -1,0 +1,61 @@
+{% extends 'administrador/base_admin.html' %}
+{% block titulo %}Eliminar Instructor{% endblock %}
+{% block encabezado %}Eliminar Instructor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+
+    <div class="card border-0 shadow-sm rounded-4 text-center">
+      <div class="card-body p-5">
+
+        <!-- Ícono advertencia -->
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+             style="width:72px;height:72px;background:rgba(220,53,69,.1);">
+          <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+        </div>
+
+        <h4 class="fw-bold mb-2">¿Eliminar instructor?</h4>
+        <p class="text-muted mb-1">Estás a punto de eliminar al instructor:</p>
+
+        <!-- Info del instructor -->
+        <div class="my-4">
+          {% if instructor.photo %}
+            <img src="{{ instructor.photo.url }}" 
+                 class="rounded-circle mb-3" 
+                 style="width:80px;height:80px;object-fit:cover;" 
+                 alt="{{ instructor.name }}">
+          {% else %}
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                 style="width:80px;height:80px;background:#f3f4f6;">
+              <i class="bi bi-person fs-2 text-muted"></i>
+            </div>
+          {% endif %}
+          <div class="fw-bold fs-5">{{ instructor.name }}</div>
+          <div class="text-muted small">{{ instructor.specialties }}</div>
+        </div>
+
+        <p class="text-danger small mb-4">
+          <i class="bi bi-exclamation-circle me-1"></i>
+          Esta acción no se puede deshacer.
+        </p>
+
+        <div class="d-flex gap-3 justify-content-center">
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger rounded-3 px-4">
+              <i class="bi bi-trash3 me-1"></i> Sí, eliminar
+            </button>
+          </form>
+          <a href="{% url 'administrador:instructores_list' %}"
+             class="btn btn-outline-secondary rounded-3 px-4">
+            Cancelar
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
