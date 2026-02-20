@@ -1,11 +1,15 @@
 # Pilatesreserva/settings.py
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-!7j*@b!3h6e&d@(zu@6+d8ac@+4tr1h#agatv1zv(ar+*&3s9g"
-DEBUG = True
-ALLOWED_HOSTS = []  # agrega dominios en producción
+# ═══════════════════════════════════════════════════
+# VARIABLES DE ENTORNO (protegidas)
+# ═══════════════════════════════════════════════════
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # ─────────────────────────────
 # Apps
@@ -115,9 +119,9 @@ AUTHENTICATION_BACKENDS = [
 # ─────────────────────────────
 # Login / Logout redirects
 # ─────────────────────────────
-LOGIN_URL = "login:login"
-LOGIN_REDIRECT_URL = "index:index"  # ✅ Cambiado de usuarios:home_cliente
-LOGOUT_REDIRECT_URL = "index:index"
+LOGIN_URL = '/login/pr-gestion-k7x/'
+LOGIN_REDIRECT_URL = '/administrador/'
+LOGOUT_REDIRECT_URL = '/login/pr-gestion-k7x/'
 
 # ─────────────────────────────
 # Crispy Forms
@@ -152,8 +156,3 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 # ─────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-
-LOGIN_URL = '/login/pr-gestion-k7x/'
-LOGIN_REDIRECT_URL = '/administrador/'
-LOGOUT_REDIRECT_URL = '/login/pr-gestion-k7x/'
