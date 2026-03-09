@@ -156,3 +156,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 # ─────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+CHATBOT_ADDRESS = "Av. Consistorial 2810, Peñalolén, Santiago, Chile"
+CHATBOT_PHONE = "+56 9 1234 5678"
+CHATBOT_MAP_URL = "https://maps.app.goo.gl/Ytz1CZTw9wGq4Jwh7"

@@ -1,49 +1,102 @@
+"""
+administrador/models.py
+Modelos de la aplicación administrador.
+"""
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
+from django.urls import reverse
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
+
+
+def compress_image(image_field, max_width=1920, max_height=1080, quality=90):
+    """
+    Comprime una imagen usando Pillow.
+
+    Args:
+        image_field: Campo ImageField de Django
+        max_width: Ancho máximo en píxeles
+        max_height: Alto máximo en píxeles
+        quality: Calidad JPEG (1-100)
+
+    Returns:
+        InMemoryUploadedFile: Imagen comprimida
+    """
+    img = Image.open(image_field)
+
+    # Convertir a RGB
+    if img.mode in ('RGBA', 'LA', 'P'):
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'P':
+            img = img.convert('RGBA')
+        if img.mode == 'RGBA':
+            background.paste(img, mask=img.split()[-1])
+        else:
+            background.paste(img)
+        img = background
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # Redimensionar si es necesario
+    if img.width > max_width or img.height > max_height:
+        img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+    # Comprimir
+    output = BytesIO()
+    img.save(
+        output,
+        format='JPEG',
+        quality=quality,
+        optimize=True,
+        progressive=True
+    )
+    output.seek(0)
+
+    # Generar nombre
+    filename = image_field.name.split('/')[-1]
+    filename_without_ext = filename.rsplit('.', 1)[0]
+    new_filename = f"{filename_without_ext}.jpg"
+
+    return InMemoryUploadedFile(
+        output,
+        'ImageField',
+        new_filename,
+        'image/jpeg',
+        sys.getsizeof(output),
+        None
+    )
 
 
 class Service(models.Model):
-    """
-    Modelo para gestionar los servicios ofrecidos por el centro de Pilates.
-    Estos servicios se muestran dinámicamente en la landing page.
-    """
+    """Modelo para servicios ofrecidos."""
     name = models.CharField(
         max_length=200,
-        verbose_name="Nombre del servicio",
-        help_text="Ej: Clases de Pilates, Kinesiología"
+        verbose_name="Nombre del servicio"
     )
-    description = models.TextField(
-        verbose_name="Descripción",
-        help_text="Descripción completa del servicio"
-    )
+    description = models.TextField(verbose_name="Descripción")
     price = models.DecimalField(
         max_digits=10,
-        decimal_places=0,
-        verbose_name="Precio (CLP)",
-        help_text="Precio en pesos chilenos (sin decimales)"
+        decimal_places=2,
+        verbose_name="Precio (CLP)"
     )
     image = models.ImageField(
         upload_to='services/',
-        verbose_name="Imagen",
-        help_text="Imagen representativa del servicio"
-    )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Activo",
-        help_text="Si está activo, se muestra en la landing page"
+        verbose_name="Imagen"
     )
     order = models.IntegerField(
         default=0,
-        verbose_name="Orden",
-        help_text="Orden de visualización (menor número aparece primero)"
+        verbose_name="Orden de visualización"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Activo"
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Fecha de creación"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Última actualización"
     )
 
     class Meta:
@@ -54,61 +107,77 @@ class Service(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        """Comprimir imagen antes de guardar"""
+        if self.image:
+            self.image = compress_image(
+                self.image, max_width=1920, max_height=1080, quality=90)
+        super().save(*args, **kwargs)
+
 
 class BlogPost(models.Model):
-    """
-    Modelo para gestionar publicaciones de blog/novedades.
-    Se muestran en la sección de novedades de la landing page.
-    """
+    """Modelo para posts del blog/novedades."""
     title = models.CharField(
         max_length=200,
-        verbose_name="Título",
-        help_text="Título de la publicación"
+        verbose_name="Título"
     )
-    content = models.TextField(
-        verbose_name="Contenido",
-        help_text="Contenido completo de la publicación"
-    )
+    content = models.TextField(verbose_name="Contenido")
     image = models.ImageField(
         upload_to='blog/',
-        verbose_name="Imagen destacada",
-        help_text="Imagen principal de la publicación (obligatoria)",
-        blank=False,  # ← CAMBIO: ahora es obligatoria
-        null=False    # ← CAMBIO: no puede ser NULL
+        blank=False,
+        null=False,
+        verbose_name="Imagen"
     )
     is_published = models.BooleanField(
-        default=True,
-        verbose_name="Publicado",
-        help_text="Si está publicado, se muestra en la landing page"
+        default=False,
+        verbose_name="Publicado"
     )
     published_date = models.DateTimeField(
-        default=timezone.now,
-        verbose_name="Fecha de publicación",
-        help_text="Se establece automáticamente al crear/editar"
+        null=True,
+        blank=True,
+        verbose_name="Fecha de publicación"
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Fecha de creación"
     )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Última actualización"
-    )
 
     class Meta:
-        verbose_name = "Publicación"
-        verbose_name_plural = "Publicaciones"
-        ordering = ['-published_date']
+        verbose_name = "Post del blog"
+        verbose_name_plural = "Posts del blog"
+        ordering = ['-published_date', '-created_at']
 
     def __str__(self):
         return self.title
 
-    def get_excerpt(self, words=30):
-        """Retorna un extracto del contenido"""
-        word_list = self.content.split()
-        if len(word_list) > words:
-            return ' '.join(word_list[:words]) + '...'
-        return self.content
+    def get_slug(self):
+        """Genera slug SEO-friendly desde el título"""
+        return slugify(self.title)
+
+    def get_absolute_url(self):
+        """URL canónica del post para SEO"""
+        return reverse('index:novedad_detalle', kwargs={
+            'pk': self.pk,
+            'slug': self.get_slug()
+        })
+
+    def get_excerpt(self, length=150):
+        """Extrae excerpt del contenido"""
+        if len(self.content) <= length:
+            return self.content
+        return self.content[:length].rsplit(' ', 1)[0] + '...'
+
+    def get_reading_time(self):
+        """Calcula tiempo de lectura en minutos (200 palabras/min)"""
+        palabras = len(self.content.split())
+        return max(1, round(palabras / 200))
+
+    def save(self, *args, **kwargs):
+        """Comprimir imagen antes de guardar"""
+        if self.image:
+            self.image = compress_image(
+                self.image, max_width=1920, max_height=1080, quality=90)
+        super().save(*args, **kwargs)
 
 
 class ContactMessage(models.Model):
@@ -217,3 +286,21 @@ class Instructor(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_slug(self):
+        """Genera slug SEO-friendly desde el nombre"""
+        return slugify(self.name)
+
+    def get_absolute_url(self):
+        """URL canónica del instructor para SEO"""
+        return reverse('index:instructor_detalle', kwargs={
+            'pk': self.pk,
+            'slug': self.get_slug()
+        })
+
+    def save(self, *args, **kwargs):
+        """Comprimir foto antes de guardar"""
+        if self.photo:
+            self.photo = compress_image(
+                self.photo, max_width=1200, max_height=1600, quality=90)
+        super().save(*args, **kwargs)

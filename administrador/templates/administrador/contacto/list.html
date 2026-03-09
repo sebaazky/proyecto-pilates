@@ -16,25 +16,79 @@
   </div>
 </div>
 
-<!-- Filtros por estado -->
+<!-- Buscador por nombre -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-9">
+        <label for="searchName" class="form-label fw-semibold small mb-1">
+          <i class="bi bi-search me-1"></i>Buscar por nombre o email
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="searchName" 
+               name="q" 
+               value="{{ q }}"
+               placeholder="Escribe nombre o email...">
+        {% if estado_filtro %}
+          <input type="hidden" name="estado" value="{{ estado_filtro }}">
+        {% endif %}
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-search me-1"></i>Buscar
+        </button>
+        {% if q %}
+          <a href="{% url 'administrador:mensajes_list' %}{% if estado_filtro %}?estado={{ estado_filtro }}{% endif %}" 
+             class="btn btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-x-circle me-1"></i>Limpiar búsqueda
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Filtros rápidos por estado (pills) -->
 <div class="card border-0 shadow-sm mb-4">
   <div class="card-body">
     <div class="d-flex flex-wrap gap-2">
-      <a href="{% url 'administrador:mensajes_list' %}"
+      <a href="{% url 'administrador:mensajes_list' %}{% if q %}?q={{ q }}{% endif %}"
          class="btn btn-sm {% if not estado_filtro %}btn-dark{% else %}btn-outline-secondary{% endif %}">
-        Todos
+        <i class="bi bi-inbox me-1"></i>Todos
       </a>
       {% for val, label in status_choices %}
-        <a href="{% url 'administrador:mensajes_list' %}?estado={{ val }}"
+        <a href="{% url 'administrador:mensajes_list' %}?estado={{ val }}{% if q %}&q={{ q }}{% endif %}"
            class="btn btn-sm {% if estado_filtro == val %}
              {% if val == 'new' %}btn-danger{% elif val == 'read' %}btn-warning{% else %}btn-success{% endif %}
            {% else %}btn-outline-secondary{% endif %}">
+          {% if val == 'new' %}<i class="bi bi-envelope-exclamation me-1"></i>
+          {% elif val == 'read' %}<i class="bi bi-envelope-open me-1"></i>
+          {% else %}<i class="bi bi-check-circle me-1"></i>{% endif %}
           {{ label }}
         </a>
       {% endfor %}
     </div>
   </div>
 </div>
+
+<!-- Indicador de filtros activos -->
+{% if q %}
+<div class="alert alert-info d-flex align-items-center mb-4">
+  <i class="bi bi-info-circle me-2"></i>
+  <div class="flex-grow-1">
+    Mostrando resultados para: <strong>"{{ q }}"</strong>
+    {% if estado_filtro %} · Estado: <strong>{{ estado_filtro|upper }}</strong>{% endif %}
+  </div>
+</div>
+{% elif estado_filtro %}
+<div class="alert alert-info d-flex align-items-center mb-4">
+  <i class="bi bi-funnel me-2"></i>
+  <div class="flex-grow-1">
+    Filtrando por estado: <strong>{{ estado_filtro|upper }}</strong>
+  </div>
+</div>
+{% endif %}
 
 <!-- Tabla de mensajes -->
 {% if mensajes %}
@@ -91,7 +145,18 @@
   <div class="card border-0 shadow-sm">
     <div class="card-body text-center py-5">
       <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-      <h5 class="text-muted">No hay mensajes{% if estado_filtro %} con este estado{% endif %}</h5>
+      <h5 class="text-muted">
+        {% if q or estado_filtro %}
+          No se encontraron mensajes con los filtros aplicados
+        {% else %}
+          No hay mensajes
+        {% endif %}
+      </h5>
+      {% if q or estado_filtro %}
+        <a href="{% url 'administrador:mensajes_list' %}" class="btn btn-outline-secondary mt-3">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Ver todos los mensajes
+        </a>
+      {% endif %}
     </div>
   </div>
 {% endif %}

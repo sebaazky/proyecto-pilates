@@ -1,0 +1,233 @@
+{% extends 'index/base_index.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }} | Novedades | PilatesReserva{% endblock %}
+
+{% block extra_head %}
+<!-- Meta tags SEO -->
+<meta name="description" content="{{ post.get_excerpt }}">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.get_excerpt }}">
+{% if post.image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.image.url }}">
+{% endif %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumbs -->
+<nav aria-label="breadcrumb" class="pt-4">
+  <div class="container">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'index:index' %}" class="text-decoration-none">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'index:novedades' %}" class="text-decoration-none">Novedades</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ post.title|truncatewords:5 }}</li>
+    </ol>
+  </div>
+</nav>
+
+<!-- Hero Image -->
+{% if post.image %}
+<section class="position-relative overflow-hidden" style="height:60vh;min-height:400px;max-height:600px;">
+  <img src="{{ post.image.url }}" 
+       class="w-100 h-100" 
+       style="object-fit:cover;" 
+       alt="{{ post.title }}">
+  <div class="position-absolute inset-0 w-100 h-100" 
+       style="background:linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.3));"></div>
+</section>
+{% endif %}
+
+<!-- Article Content -->
+<article class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+        
+        <!-- Header -->
+        <header class="mb-5">
+          <span class="badge rounded-pill mb-3"
+                style="background:rgba(13,202,240,.15);color:var(--bs-info);border:1px solid rgba(13,202,240,.3);">
+            Blog
+          </span>
+          <h1 class="display-5 fw-bold mb-4" style="color:var(--pr-text);line-height:1.2;">
+            {{ post.title }}
+          </h1>
+          
+          <div class="d-flex flex-wrap align-items-center gap-3 text-muted small mb-4">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-calendar3"></i>
+              <span>{{ post.published_date|date:"d \d\e F \d\e Y" }}</span>
+            </div>
+            <span>•</span>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-clock"></i>
+              <span>{{ tiempo_lectura }} min de lectura</span>
+            </div>
+          </div>
+
+          <!-- Share Buttons -->
+          <div class="d-flex gap-2 pb-4 border-bottom">
+            <a href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" 
+               target="_blank"
+               class="btn btn-sm btn-outline-success rounded-pill px-3">
+              <i class="bi bi-whatsapp me-1"></i> WhatsApp
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank"
+               class="btn btn-sm btn-outline-primary rounded-pill px-3">
+              <i class="bi bi-facebook me-1"></i> Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" 
+               target="_blank"
+               class="btn btn-sm btn-outline-info rounded-pill px-3">
+              <i class="bi bi-twitter me-1"></i> Twitter
+            </a>
+          </div>
+        </header>
+
+        <!-- Content -->
+        <div class="article-content mb-5">
+          {{ post.content|linebreaks }}
+        </div>
+
+        <!-- Back to list -->
+        <div class="py-4 border-top border-bottom mb-5">
+          <a href="{% url 'index:novedades' %}" 
+             class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-2"></i> Volver a Novedades
+          </a>
+        </div>
+
+        <!-- Related Articles -->
+        {% if relacionados %}
+        <section class="mb-5">
+          <h3 class="h4 fw-bold mb-4">Artículos relacionados</h3>
+          <div class="row g-4">
+            {% for related in relacionados %}
+            <div class="col-md-4">
+              <a href="{{ related.get_absolute_url }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 rounded-3 overflow-hidden"
+                     style="transition:all .25s ease;"
+                     onmouseenter="this.style.transform='translateY(-4px)'"
+                     onmouseleave="this.style.transform='none'">
+                  {% if related.image %}
+                    <img src="{{ related.image.url }}" 
+                         class="card-img-top" 
+                         style="height:140px;object-fit:cover;" 
+                         alt="{{ related.title }}">
+                  {% else %}
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="height:140px;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+                      <i class="bi bi-megaphone text-muted"></i>
+                    </div>
+                  {% endif %}
+                  <div class="card-body p-3">
+                    <small class="text-muted d-block mb-1">
+                      {{ related.published_date|date:"d/m/Y" }}
+                    </small>
+                    <h6 class="card-title fw-bold mb-0" style="color:var(--pr-text);">
+                      {{ related.title|truncatewords:8 }}
+                    </h6>
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+
+        <!-- CTA Final -->
+        <section class="rounded-4 p-4 p-md-5 text-center text-white"
+                 style="background:linear-gradient(135deg,#0dcaf0,#6f42c1);">
+          <i class="bi bi-chat-dots fs-1 d-block mb-3"></i>
+          <h4 class="fw-bold mb-3">¿Te gustó este artículo?</h4>
+          <p class="mb-4 opacity-90">
+            Contáctanos para conocer más sobre nuestras clases y servicios
+          </p>
+          <a href="{% url 'index:contacto_publico' %}" 
+             class="btn btn-light btn-lg rounded-pill px-5 fw-semibold">
+            Contáctanos
+          </a>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  /* Tipografía editorial */
+  .article-content {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--pr-text);
+  }
+  
+  .article-content p {
+    margin-bottom: 1.5rem;
+  }
+  
+  .article-content h2,
+  .article-content h3 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    color: var(--pr-text);
+  }
+  
+  .article-content h2 {
+    font-size: 1.75rem;
+  }
+  
+  .article-content h3 {
+    font-size: 1.5rem;
+  }
+  
+  .article-content ul,
+  .article-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+  
+  .article-content li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .article-content blockquote {
+    border-left: 4px solid var(--bs-info);
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: var(--pr-text2);
+  }
+  
+  .article-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 2rem 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  }
+  
+  .article-content a {
+    color: var(--bs-info);
+    text-decoration: underline;
+  }
+  
+  .article-content a:hover {
+    color: var(--bs-primary);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .article-content {
+      font-size: 1rem;
+    }
+  }
+</style>
+
+{% endblock %}

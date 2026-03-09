@@ -586,20 +586,29 @@
     <div class="row g-4">
       {% for instructor in instructores %}
         <div class="col-12 col-md-{% if instructores|length == 1 %}8 mx-auto{% elif instructores|length == 2 %}6{% else %}4{% endif %} ns-reveal ns-reveal-d{{ forloop.counter }}">
-          <div class="ns-instructor">
-            {% if instructor.photo %}
-              <img src="{{ instructor.photo.url }}" alt="{{ instructor.name }}">
-            {% else %}
-              <div style="width:100%;aspect-ratio:3/4;background:#f3f4f6;display:flex;align-items:center;justify-content:center;">
-                <i class="bi bi-person fs-1 text-muted"></i>
+          <a href="{{ instructor.get_absolute_url }}" class="text-decoration-none">
+            <div class="ns-instructor" style="cursor:pointer;transition:all .3s ease;"
+                 onmouseenter="this.style.transform='translateY(-8px)'"
+                 onmouseleave="this.style.transform='none'">
+              {% if instructor.photo %}
+                <img src="{{ instructor.photo.url }}" alt="{{ instructor.name }}">
+              {% else %}
+                <div style="width:100%;aspect-ratio:3/4;background:#f3f4f6;display:flex;align-items:center;justify-content:center;">
+                  <i class="bi bi-person fs-1 text-muted"></i>
+                </div>
+              {% endif %}
+              <div class="ns-instructor-info">
+                <div class="ns-instructor-name">{{ instructor.name }}</div>
+                <div class="ns-instructor-role">{{ instructor.specialties }}</div>
+                <div class="ns-instructor-bio">{{ instructor.bio|truncatewords:20 }}</div>
+                <div class="mt-3">
+                  <span class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                    Ver perfil completo <i class="bi bi-arrow-right ms-1"></i>
+                  </span>
+                </div>
               </div>
-            {% endif %}
-            <div class="ns-instructor-info">
-              <div class="ns-instructor-name">{{ instructor.name }}</div>
-              <div class="ns-instructor-role">{{ instructor.specialties }}</div>
-              <div class="ns-instructor-bio">{{ instructor.bio|truncatewords:20 }}</div>
             </div>
-          </div>
+          </a>
         </div>
       {% endfor %}
     </div>

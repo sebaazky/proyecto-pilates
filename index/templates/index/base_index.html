@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="{% static 'css/site.css' %}?v=41" />
   <link rel="stylesheet" href="{% static 'css/navbar.css' %}?v=52" />
 
+  {% block extra_head %}{% endblock %}
+
   <style>
     /* ── VARIABLES ────────────────────────────────── */
     :root {
@@ -141,24 +143,20 @@
     }
 
     /* ── HERO CARD ────────────────────────────────── */
-    /* MODO CLARO: fondo blanco translúcido */
     .idx-hero-card {
       background: rgba(255,255,255,.93);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      box-shadow: 0 20px 40px rgba(0,0,0,.18),
-                  inset 0 0 0 1px rgba(255,255,255,.6);
+      box-shadow: 0 20px 40px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.6);
       border: 1px solid rgba(255,255,255,.5);
     }
     .idx-hero-card h1 { color: #0f172a !important; }
     .idx-hero-card p  { color: #304057 !important; }
 
-    /* MODO OSCURO: fondo oscuro translúcido */
     [data-theme="dark"] .idx-hero-card {
       background: rgba(10,14,30,.88) !important;
       border: 1px solid rgba(255,255,255,.08) !important;
-      box-shadow: 0 20px 40px rgba(0,0,0,.5),
-                  inset 0 0 0 1px rgba(255,255,255,.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05);
     }
     [data-theme="dark"] .idx-hero-card h1 { color: #f1f5f9 !important; }
     [data-theme="dark"] .idx-hero-card p  { color: #94a3b8 !important; }
@@ -171,63 +169,121 @@
       color: #e2e8f0 !important;
     }
     [data-theme="dark"] .idx-hero-card .text-bg-light {
-      background: rgba(255,255,255,.1) !important;
-      color: #cbd5e1 !important;
+      background: rgba(255,255,255,.08) !important;
+      color: #e2e8f0 !important;
       border-color: rgba(255,255,255,.15) !important;
     }
 
-    /* ── FOOTER ───────────────────────────────────── */
-    .footer-neo {
-      background: linear-gradient(180deg, #0b1220 0%, #0a0e1a 100%);
-      color: #e2e8f0;
+    /* ── CHATBOT ──────────────────────────────────── */
+    #chatFab {
+      position: fixed; bottom: 24px; right: 24px; z-index: 1050;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; border: 0; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(79,141,247,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; transition: all .3s;
     }
-    .footer-divider { border-color: rgba(255,255,255,.08); }
-    .footer-title   { color: #fff; letter-spacing: .3px; }
-    .footer-list li { margin-bottom: .45rem; }
-    .footer-link    { opacity: .75; transition: opacity .15s; }
-    .footer-link:hover { opacity: 1; }
-    .btn-icon {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.12);
-      color: #e2e8f0; display: inline-flex;
-      align-items: center; justify-content: center;
-      text-decoration: none; transition: background .2s;
-    }
-    .btn-icon:hover { background: rgba(255,255,255,.18); color: #fff; }
+    #chatFab:hover { transform: scale(1.08); box-shadow: 0 12px 28px rgba(79,141,247,.4); }
 
-    /* ── BOTÓN ARRIBA ─────────────────────────────── */
-    .btn-to-top {
-      bottom: 1.5rem; right: 1.5rem;
-      width: 42px; height: 42px; border-radius: 50%;
-      display: none; align-items: center; justify-content: center; z-index: 999;
+    #chatBox {
+      display: none; /* ← IMPORTANTE: Empieza oculto */
+      position: fixed; bottom: 95px; right: 24px; z-index: 1050;
+      width: 360px; max-width: calc(100vw - 48px); max-height: 520px;
+      border-radius: 16px; background: var(--pr-surface);
+      border: 1px solid var(--pr-border);
+      box-shadow: 0 16px 40px rgba(0,0,0,.15);
+      flex-direction: column; overflow: hidden;
     }
-    .btn-to-top.show { display: flex; }
+    #chatBox header {
+      padding: 1rem; background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; display: flex; justify-content: space-between; align-items: center;
+    }
+    #chatMsgs {
+      flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .6rem;
+      background: var(--pr-bg);
+    }
+    .bubble {
+      padding: .7rem 1rem; border-radius: 14px; max-width: 80%; word-wrap: break-word;
+      font-size: .9rem; line-height: 1.4; animation: fadeIn .3s;
+    }
+    .me-bubble {
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; align-self: flex-end; border-bottom-right-radius: 4px;
+    }
+    .bot-bubble {
+      background: var(--pr-soft); color: var(--pr-text);
+      border: 1px solid var(--pr-border); align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
-    /* ── REVEAL ───────────────────────────────────── */
+    #chatForm {
+      padding: .8rem; border-top: 1px solid var(--pr-border);
+      background: var(--pr-surface); display: flex; gap: .5rem;
+    }
+    #chatInput {
+      flex: 1; padding: .6rem .9rem; border-radius: 999px;
+      border: 1px solid var(--pr-border); background: var(--pr-bg);
+      color: var(--pr-text); font-size: .9rem; outline: none;
+    }
+    #chatSend {
+      padding: .6rem 1.2rem; border-radius: 999px; border: 0;
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; font-weight: 600; cursor: pointer;
+      transition: all .2s; font-size: .85rem;
+    }
+    #chatSend:hover { transform: scale(1.03); }
+
+    .btn-gradient {
+      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
+      color: #fff; border: 0; box-shadow: 0 8px 18px rgba(79,141,247,.22);
+    }
+    .btn-gradient:hover { filter: brightness(1.05); color: #fff; }
+
     .lp-reveal {
       opacity: 0; transform: translateY(14px);
       transition: opacity .45s ease, transform .45s ease;
     }
     .lp-reveal.is-in { opacity: 1; transform: none; }
 
-    /* ── UTILIDADES GENERALES ─────────────────────── */
-    .btn-gradient {
-      background: linear-gradient(90deg, var(--pr-ac1), var(--pr-ac2));
-      color: #fff; border: 0;
-      box-shadow: 0 12px 26px rgba(79,141,247,.26);
+    .btn-to-top {
+      position: fixed; bottom: 24px; left: 24px; z-index: 1040;
+      width: 48px; height: 48px; border-radius: 50%;
+      display: none; opacity: 0; transition: opacity .3s;
     }
-    .btn-gradient:hover { filter: brightness(1.05); color: #fff; }
+    .btn-to-top.show { display: flex !important; opacity: 1; align-items: center; justify-content: center; }
+
+    .footer-neo {
+      background: linear-gradient(180deg, #0f172a, #1e293b);
+      position: relative; padding-top: 0;
+    }
+    .footer-title { color: #f1f5f9; margin-bottom: .8rem; }
+    .footer-list li { margin-bottom: .4rem; }
+    .footer-link { opacity: .75; transition: opacity .2s; }
+    .footer-link:hover { opacity: 1; }
+    .footer-divider { border-color: rgba(255,255,255,.1); }
+    .btn-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,.1); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      text-decoration: none; transition: all .2s; font-size: 1.1rem;
+    }
+    .btn-icon:hover {
+      background: rgba(255,255,255,.2); color: #fff;
+      transform: translateY(-2px);
+    }
   </style>
-  {% block extra_head %}{% endblock %}
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+  <!-- CSRF token -->
+  <div id="csrf-token" style="display: none">{% csrf_token %}</div>
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <div class="tb-aura">
     <div class="container tb-flex">
-      <a href="{% url 'index:index' %}" class="tb-brand">
+      <a href="/" class="tb-brand" aria-label="Pilates Reforma">
         <span class="tb-badge"><i class="bi bi-heart-pulse-fill"></i></span>
         <span class="tb-title">Pilates <span>Reforma</span></span>
       </a>
@@ -308,6 +364,30 @@
 
   <!-- CONTENIDO -->
   {% block content %}{% endblock %}
+
+  <!-- CHATBOT -->
+  <button id="chatFab" title="Chatear" aria-label="Abrir chat">
+    <i class="bi bi-chat-dots-fill"></i>
+  </button>
+
+  <div id="chatBox" role="dialog" aria-label="Asistente Pilates">
+    <header>
+      <div>
+        <div class="fw-semibold">Asistente Pilates</div>
+        <small class="opacity-75">Estoy para ayudarte ✨</small>
+      </div>
+      <button class="btn btn-sm btn-light" id="chatClose" aria-label="Cerrar">
+        <i class="bi bi-x"></i>
+      </button>
+    </header>
+    <div id="chatMsgs"></div>
+    <form id="chatForm" autocomplete="off">
+      <input id="chatInput" type="text" placeholder="Escribe tu mensaje..." />
+      <button id="chatSend" type="submit">
+        <i class="bi bi-send"></i> Enviar
+      </button>
+    </form>
+  </div>
 
   <!-- FOOTER -->
   <footer class="footer-neo text-white mt-auto">
@@ -396,6 +476,127 @@
       window.addEventListener("scroll",()=>top.classList.toggle("show",window.scrollY>400));
       top.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
     }
+
+    // ============ CHATBOT ============
+    const ENDPOINT = "{% url 'index:chat_api' %}";
+    const box = document.getElementById("chatBox");
+    const fab = document.getElementById("chatFab");
+    const closeBtn = document.getElementById("chatClose");
+    const msgs = document.getElementById("chatMsgs");
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("chatInput");
+    const SESSION_KEY = "pr-chat-session";
+
+    function esc(s){ return (s || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[ch]); }
+    function linkify(t){ const re=/(https?:\/\/[^\s<>"']+)/g; return t.replace(re, u => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`); }
+    function toHtml(t){ return linkify(esc(t).replace(/\n/g,"<br>")); }
+
+    function getCSRF(){
+      const n=document.querySelector('#csrf-token input[name=csrfmiddlewaretoken]');
+      if(n&&n.value)return n.value;
+      const m=document.cookie.match(/(^|;)\s*csrftoken=([^;]+)/);
+      return m?decodeURIComponent(m[2]):"";
+    }
+    
+    function saveHistory(){
+      try{
+        const data=[...msgs.querySelectorAll(".bubble")].map(b=>({
+          t: b.classList.contains("me-bubble") ? "me" : "bot",
+          m: b.innerText
+        }));
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+      }catch(e){}
+    }
+    
+    function loadHistory(){
+      try{
+        const raw = sessionStorage.getItem(SESSION_KEY);
+        if(!raw) return false;
+        const data = JSON.parse(raw);
+        data.forEach(o => appendBubble(o.m, o.t === "me", false));
+        msgs.scrollTop = msgs.scrollHeight;
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+    
+    function appendBubble(text, isMe, save = true){
+      const div=document.createElement("div");
+      div.className="bubble "+(isMe?"me-bubble":"bot-bubble");
+      div.innerHTML=toHtml(text);
+      msgs.appendChild(div);
+      msgs.scrollTop=msgs.scrollHeight;
+      if(save) saveHistory();
+    }
+    
+    function initChat(){
+      msgs.innerHTML = '';
+      const hasHistory = loadHistory();
+      if(!hasHistory){
+        appendBubble("¡Hola! Soy tu asistente de Pilates 🤸‍♀️\nPregúntame por servicios, precios, horarios o ubicación.", false);
+      }
+    }
+    
+    function toggle(open){
+      const isOpen = box.style.display === "flex";
+      if(typeof open === "boolean"){
+        box.style.display = open ? "flex" : "none";
+      } else {
+        box.style.display = isOpen ? "none" : "flex";
+      }
+      
+      const fabIcon = fab.querySelector("i");
+      if(box.style.display === "flex"){
+        if(msgs.children.length === 0) initChat();
+        fabIcon.className = "bi bi-x-lg";
+        setTimeout(()=>input.focus(),100);
+      } else {
+        fabIcon.className = "bi bi-chat-dots-fill";
+      }
+    }
+    
+    fab.addEventListener("click",()=>toggle());
+    closeBtn.addEventListener("click",()=>toggle(false));
+
+    form.addEventListener("submit",async(e)=>{
+      e.preventDefault();
+      const text=(input.value||"").trim(); if(!text) return;
+      appendBubble(text,true); input.value="";
+
+      const wait=document.createElement("div");
+      wait.className="bubble bot-bubble"; wait.textContent="…";
+      msgs.appendChild(wait); msgs.scrollTop=msgs.scrollHeight;
+
+      try{
+        const res=await fetch(ENDPOINT,{
+          method:"POST",
+          headers:{"Content-Type":"application/json","X-CSRFToken":getCSRF()},
+          body:JSON.stringify({message:text})
+        });
+        msgs.removeChild(wait);
+        if(res.ok){
+          const data=await res.json();
+          appendBubble(data.reply || "Gracias por tu mensaje.",false);
+        }else{
+          appendBubble("Lo siento, no pude responder ahora. Intenta más tarde.",false);
+        }
+      }catch{
+        try{msgs.removeChild(wait);}catch{}
+        appendBubble("Hubo un problema de conexión. Intenta nuevamente.",false);
+      }
+      msgs.scrollTop=msgs.scrollHeight;
+    });
+
+    input.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter"&&!e.shiftKey){
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+    
+    // Inicializar chat al cargar la página
+    initChat();
   })();
   </script>
   {% block extra_js %}{% endblock %}

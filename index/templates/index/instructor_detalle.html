@@ -1,0 +1,219 @@
+{% extends 'index/base_index.html' %}
+{% load static %}
+
+{% block title %}{{ instructor.name }} | Equipo | PilatesReserva{% endblock %}
+
+{% block extra_head %}
+<!-- Meta tags SEO -->
+<meta name="description" content="{{ instructor.bio|truncatewords:30 }}">
+<meta property="og:title" content="{{ instructor.name }} - Instructor de Pilates">
+<meta property="og:description" content="{{ instructor.specialties }}">
+{% if instructor.photo %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ instructor.photo.url }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumbs -->
+<nav aria-label="breadcrumb" class="pt-4">
+  <div class="container">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'index:index' %}" class="text-decoration-none">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'index:nosotros' %}" class="text-decoration-none">Nosotros</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ instructor.name }}</li>
+    </ol>
+  </div>
+</nav>
+
+<!-- Perfil del Instructor -->
+<section class="py-5">
+  <div class="container">
+    
+    <!-- Header con foto y datos principales -->
+    <div class="row g-5 align-items-center mb-5">
+      
+      <!-- Foto del instructor -->
+      <div class="col-lg-5">
+        <div class="position-relative">
+          {% if instructor.photo %}
+            <img src="{{ instructor.photo.url }}" 
+                 alt="{{ instructor.name }}" 
+                 class="w-100 rounded-4 shadow-lg"
+                 style="object-fit:cover;aspect-ratio:3/4;">
+          {% else %}
+            <div class="w-100 rounded-4 shadow-lg d-flex align-items-center justify-content-center"
+                 style="aspect-ratio:3/4;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+              <i class="bi bi-person fs-1 text-muted"></i>
+            </div>
+          {% endif %}
+          
+          <!-- Badge certificación -->
+          <div class="position-absolute top-0 end-0 m-3">
+            <span class="badge rounded-pill px-3 py-2 shadow"
+                  style="background:rgba(13,202,240,.95);backdrop-filter:blur(8px);">
+              <i class="bi bi-patch-check-fill me-1"></i> Certificado
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Información principal -->
+      <div class="col-lg-7">
+        <span class="badge rounded-pill mb-3"
+              style="background:rgba(13,202,240,.15);color:var(--bs-info);border:1px solid rgba(13,202,240,.3);">
+          Nuestro Equipo
+        </span>
+        
+        <h1 class="display-5 fw-bold mb-3" style="color:var(--pr-text);">
+          {{ instructor.name }}
+        </h1>
+        
+        <p class="lead text-primary fw-semibold mb-4">
+          {{ instructor.specialties }}
+        </p>
+        
+        <div class="mb-4 pb-4 border-bottom">
+          <h5 class="fw-bold mb-3" style="color:var(--pr-text);">
+            <i class="bi bi-person-badge me-2"></i>Sobre {{ instructor.name|truncatewords:1 }}
+          </h5>
+          <p class="text-muted" style="font-size:1.05rem;line-height:1.7;">
+            {{ instructor.bio }}
+          </p>
+        </div>
+        
+        <!-- CTA Contacto -->
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'index:contacto_publico' %}" 
+             class="btn btn-lg rounded-pill px-5 fw-semibold text-white"
+             style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);">
+            <i class="bi bi-chat-dots me-2"></i>Agendar una clase
+          </a>
+          <a href="{% url 'index:nosotros' %}" 
+             class="btn btn-lg btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-2"></i>Ver todo el equipo
+          </a>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Certificaciones -->
+    {% if instructor.certifications %}
+    <div class="row mb-5">
+      <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-header py-3 px-4"
+               style="background:linear-gradient(90deg,#0dcaf0,#6f42c1);">
+            <h5 class="mb-0 text-white fw-bold">
+              <i class="bi bi-award-fill me-2"></i>Certificaciones y Formación
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="text-muted" style="font-size:1.05rem;line-height:1.8;white-space:pre-line;">{{ instructor.certifications }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Metodología / Enfoque -->
+    <div class="row mb-5">
+      <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5"
+             style="background:var(--pr-soft);">
+          <div class="text-center mb-4">
+            <i class="bi bi-lightbulb fs-1 text-primary d-block mb-3"></i>
+            <h3 class="fw-bold" style="color:var(--pr-text);">Filosofía de Enseñanza</h3>
+          </div>
+          <div class="row g-4">
+            <div class="col-md-4 text-center">
+              <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                   style="width:64px;height:64px;background:rgba(13,202,240,.15);">
+                <i class="bi bi-person-check fs-3 text-primary"></i>
+              </div>
+              <h6 class="fw-bold">Atención Personalizada</h6>
+              <p class="text-muted small mb-0">Adaptamos cada clase a tus necesidades individuales</p>
+            </div>
+            <div class="col-md-4 text-center">
+              <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                   style="width:64px;height:64px;background:rgba(13,202,240,.15);">
+                <i class="bi bi-graph-up-arrow fs-3 text-primary"></i>
+              </div>
+              <h6 class="fw-bold">Progresión Segura</h6>
+              <p class="text-muted small mb-0">Avanzamos a tu ritmo con técnicas comprobadas</p>
+            </div>
+            <div class="col-md-4 text-center">
+              <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                   style="width:64px;height:64px;background:rgba(13,202,240,.15);">
+                <i class="bi bi-heart-pulse fs-3 text-primary"></i>
+              </div>
+              <h6 class="fw-bold">Bienestar Integral</h6>
+              <p class="text-muted small mb-0">Cuerpo y mente en equilibrio constante</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Otros instructores del equipo -->
+    {% if otros %}
+    <div class="row">
+      <div class="col-12">
+        <h3 class="h4 fw-bold mb-4 text-center">Conoce a todo el equipo</h3>
+        <div class="row g-4">
+          {% for otro in otros %}
+          <div class="col-md-4">
+            <a href="{{ otro.get_absolute_url }}" class="text-decoration-none">
+              <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
+                   style="transition:all .25s ease;"
+                   onmouseenter="this.style.transform='translateY(-6px)'"
+                   onmouseleave="this.style.transform='none'">
+                {% if otro.photo %}
+                  <img src="{{ otro.photo.url }}" 
+                       class="card-img-top" 
+                       style="height:280px;object-fit:cover;" 
+                       alt="{{ otro.name }}">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center"
+                       style="height:280px;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+                    <i class="bi bi-person fs-1 text-muted"></i>
+                  </div>
+                {% endif %}
+                <div class="card-body p-4">
+                  <h6 class="card-title fw-bold mb-2" style="color:var(--pr-text);">
+                    {{ otro.name }}
+                  </h6>
+                  <p class="card-text text-primary small fw-semibold mb-0">
+                    {{ otro.specialties }}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<!-- CTA Final -->
+<section class="py-5 text-white"
+         style="background:linear-gradient(135deg,#0dcaf0,#6f42c1);">
+  <div class="container text-center">
+    <i class="bi bi-calendar-check fs-1 d-block mb-3"></i>
+    <h3 class="fw-bold mb-3">¿Listo para comenzar?</h3>
+    <p class="mb-4 opacity-90" style="max-width:600px;margin:0 auto;">
+      Agenda una clase con {{ instructor.name }} y descubre cómo Pilates puede transformar tu bienestar
+    </p>
+    <a href="{% url 'index:contacto_publico' %}" 
+       class="btn btn-light btn-lg rounded-pill px-5 fw-semibold">
+      <i class="bi bi-chat-dots me-2"></i>Contáctanos
+    </a>
+  </div>
+</section>
+
+{% endblock %}

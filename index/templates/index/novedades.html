@@ -15,41 +15,168 @@
     </div>
 
     {% if posts %}
-      <div class="row g-4">
-        {% for post in posts %}
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
-                 style="transition:all .25s ease;"
-                 onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 1rem 2rem rgba(0,0,0,.1)';"
-                 onmouseleave="this.style.transform='none';this.style.boxShadow='';">
-              {% if post.image %}
-                <img src="{{ post.image.url }}" class="card-img-top"
-                     style="height:200px;object-fit:cover;" alt="{{ post.title }}">
-              {% else %}
-                <div class="d-flex align-items-center justify-content-center"
-                     style="height:200px;background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
-                  <i class="bi bi-megaphone text-muted fs-1"></i>
+      <!-- Artículo destacado (primer post) -->
+      {% with posts.0 as featured %}
+      <article class="card border-0 shadow-lg rounded-4 overflow-hidden mb-5"
+               style="transition:all .3s ease;"
+               onmouseenter="this.style.transform='translateY(-4px)'"
+               onmouseleave="this.style.transform='none'">
+        <a href="{{ featured.get_absolute_url }}" class="text-decoration-none">
+          <div class="row g-0">
+            <!-- Imagen destacada -->
+            <div class="col-lg-7">
+              <div class="position-relative overflow-hidden" style="height:100%;min-height:400px;">
+                {% if featured.image %}
+                  <img src="{{ featured.image.url }}" 
+                       class="w-100 h-100" 
+                       style="object-fit:cover;transition:transform .5s ease;" 
+                       alt="{{ featured.title }}"
+                       onmouseover="this.style.transform='scale(1.05)'"
+                       onmouseout="this.style.transform='scale(1)'">
+                {% else %}
+                  <div class="w-100 h-100 d-flex align-items-center justify-content-center"
+                       style="background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+                    <i class="bi bi-megaphone text-muted" style="font-size:4rem;"></i>
+                  </div>
+                {% endif %}
+                
+                <!-- Badge "Destacado" -->
+                <div class="position-absolute top-0 start-0 m-3">
+                  <span class="badge rounded-pill px-3 py-2"
+                        style="background:rgba(13,202,240,.95);backdrop-filter:blur(8px);">
+                    <i class="bi bi-star-fill me-1"></i> Destacado
+                  </span>
                 </div>
-              {% endif %}
-              <div class="card-body p-4 d-flex flex-column">
-                <small class="text-muted mb-1">{{ post.published_date|date:"d \d\e F \d\e Y" }}</small>
-                <h5 class="card-title fw-bold">{{ post.title }}</h5>
-                <p class="card-text text-muted flex-grow-1">{{ post.get_excerpt }}</p>
+              </div>
+            </div>
+            
+            <!-- Contenido destacado -->
+            <div class="col-lg-5">
+              <div class="p-4 p-lg-5 h-100 d-flex flex-column justify-content-center">
+                <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                  <i class="bi bi-calendar3"></i>
+                  <span>{{ featured.published_date|date:"d \d\e F, Y" }}</span>
+                  <span class="mx-1">•</span>
+                  <i class="bi bi-clock"></i>
+                  <span>{{ featured.get_reading_time }} min</span>
+                </div>
+                
+                <h2 class="fw-bold mb-3" style="color:var(--pr-text);font-size:1.75rem;">
+                  {{ featured.title }}
+                </h2>
+                
+                <p class="text-muted mb-4" style="font-size:1.05rem;line-height:1.6;">
+                  {{ featured.get_excerpt|truncatewords:25 }}
+                </p>
+                
+                <div class="d-inline-flex align-items-center text-primary fw-semibold">
+                  Leer artículo completo <i class="bi bi-arrow-right ms-2"></i>
+                </div>
               </div>
             </div>
           </div>
+        </a>
+      </article>
+      {% endwith %}
+
+      <!-- Grid de artículos restantes -->
+      {% if posts|length > 1 %}
+      <div class="row g-4">
+        {% for post in posts %}
+          {% if not forloop.first %}
+          <div class="col-12 col-md-6 col-lg-4">
+            <article class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden"
+                     style="transition:all .3s ease;"
+                     onmouseenter="this.style.transform='translateY(-6px)'"
+                     onmouseleave="this.style.transform='none'">
+              <a href="{{ post.get_absolute_url }}" class="text-decoration-none">
+                <div class="position-relative overflow-hidden" style="height:220px;">
+                  {% if post.image %}
+                    <img src="{{ post.image.url }}" 
+                         class="w-100 h-100" 
+                         style="object-fit:cover;transition:transform .3s ease;" 
+                         alt="{{ post.title }}"
+                         onmouseover="this.style.transform='scale(1.08)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                  {% else %}
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center"
+                         style="background:linear-gradient(135deg,#e0f7ff,#f3e8ff);">
+                      <i class="bi bi-megaphone text-muted fs-1"></i>
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Overlay gradiente -->
+                  <div class="position-absolute bottom-0 start-0 w-100 p-3"
+                       style="background:linear-gradient(to top, rgba(0,0,0,.75), transparent);">
+                    <div class="d-flex align-items-center gap-2 text-white small">
+                      <i class="bi bi-calendar3"></i>
+                      <span>{{ post.published_date|date:"d/m/Y" }}</span>
+                      <span class="mx-1">•</span>
+                      <i class="bi bi-clock"></i>
+                      <span>{{ post.get_reading_time }} min</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-body p-4 d-flex flex-column">
+                  <h5 class="card-title fw-bold mb-2" style="color:var(--pr-text);line-height:1.3;">
+                    {{ post.title }}
+                  </h5>
+                  <p class="card-text text-muted flex-grow-1 mb-3 small">
+                    {{ post.get_excerpt|truncatewords:15 }}
+                  </p>
+                  <div class="pt-2 border-top">
+                    <span class="text-primary fw-semibold small">
+                      Leer más <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </article>
+          </div>
+          {% endif %}
         {% endfor %}
       </div>
+      {% endif %}
+
     {% else %}
       <div class="text-center py-5">
         <i class="bi bi-megaphone fs-1 text-muted d-block mb-3"></i>
         <h5 class="text-muted">No hay publicaciones todavía</h5>
+        <p class="text-muted">Pronto compartiremos contenido interesante</p>
         <a href="{% url 'index:index' %}" class="btn btn-outline-secondary mt-3 rounded-3">
-          Volver al inicio
+          <i class="bi bi-house me-1"></i> Volver al inicio
         </a>
       </div>
     {% endif %}
 
   </div>
 </section>
+
+<style>
+  /* Hover effects suaves */
+  article.card {
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+  
+  article.card:hover {
+    box-shadow: 0 12px 28px rgba(0,0,0,.15) !important;
+  }
+  
+  /* Asegurar que los links no cambien color del texto */
+  article a {
+    color: inherit;
+  }
+  
+  article a:hover {
+    color: inherit;
+  }
+  
+  /* Responsive: artículo destacado en móvil */
+  @media (max-width: 991px) {
+    article .row > div:first-child {
+      min-height: 300px !important;
+    }
+  }
+</style>
 {% endblock %}

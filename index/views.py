@@ -18,11 +18,52 @@ def nosotros(request):
     return render(request, 'index/nosotros.html', {'instructores': instructores})
 
 
+def instructor_detalle(request, pk, slug=None):
+    """
+    Muestra el perfil completo de un instructor.
+    Incluye foto, bio completa, certificaciones y otros instructores.
+    """
+    instructor = get_object_or_404(Instructor, pk=pk, is_active=True)
+
+    # Otros instructores (máximo 3, excluyendo el actual)
+    otros = Instructor.objects.filter(
+        is_active=True
+    ).exclude(pk=pk).order_by('order')[:3]
+
+    return render(request, 'index/instructor_detalle.html', {
+        'instructor': instructor,
+        'otros': otros,
+    })
+
+
 def novedades(request):
     """Página de blog/novedades completa."""
     posts = BlogPost.objects.filter(
         is_published=True).order_by('-published_date')
     return render(request, 'index/novedades.html', {'posts': posts})
+
+
+def novedad_detalle(request, pk, slug=None):
+    """
+    Muestra el detalle completo de una publicación del blog.
+    Incluye artículos relacionados y metadata SEO.
+    """
+    post = get_object_or_404(BlogPost, pk=pk, is_published=True)
+
+    # Artículos relacionados (últimos 3, excluyendo el actual)
+    relacionados = BlogPost.objects.filter(
+        is_published=True
+    ).exclude(pk=pk).order_by('-published_date')[:3]
+
+    # Calcular tiempo de lectura estimado (200 palabras por minuto)
+    palabras = len(post.content.split())
+    tiempo_lectura = max(1, round(palabras / 200))
+
+    return render(request, 'index/novedad_detalle.html', {
+        'post': post,
+        'relacionados': relacionados,
+        'tiempo_lectura': tiempo_lectura,
+    })
 
 
 def servicios(request):

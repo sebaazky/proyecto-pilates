@@ -237,13 +237,29 @@ def blog_toggle_publicado(request, pk):
 
 @solo_admin
 def mensajes_list(request):
+    """Lista de mensajes con filtros por estado y búsqueda por nombre/email"""
     estado = request.GET.get('estado', '')
+    q = request.GET.get('q', '').strip()
+
     mensajes = ContactMessage.objects.all()
+
+    # Filtrar por estado
     if estado:
         mensajes = mensajes.filter(status=estado)
+
+    # Filtrar por nombre o email
+    if q:
+        mensajes = mensajes.filter(
+            Q(name__icontains=q) | Q(email__icontains=q)
+        )
+
+    # Ordenar: nuevos primero, luego por fecha descendente
+    mensajes = mensajes.order_by('-created_at')
+
     return render(request, 'administrador/contacto/list.html', {
         'mensajes': mensajes,
         'estado_filtro': estado,
+        'q': q,
         'status_choices': ContactMessage.STATUS_CHOICES,
         **get_sidebar_context()
     })

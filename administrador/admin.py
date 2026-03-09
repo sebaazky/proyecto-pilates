@@ -1,103 +1,43 @@
+"""
+administrador/admin.py
+Configuración del panel de administración de Django.
+"""
 from django.contrib import admin
-from .models import Service, BlogPost, ContactMessage
+from .models import Service, BlogPost, ContactMessage, Instructor
 
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    """
-    Configuración del admin para Servicios
-    """
-    list_display = ['name', 'price', 'is_active', 'order', 'created_at']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['name', 'description']
-    list_editable = ['is_active', 'order']
-    ordering = ['order', 'name']
-
-    fieldsets = (
-        ('Información del Servicio', {
-            'fields': ('name', 'description', 'price', 'image')
-        }),
-        ('Configuración', {
-            'fields': ('is_active', 'order')
-        }),
-        ('Fechas', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-    readonly_fields = ['created_at', 'updated_at']
+    list_display = ('name', 'price', 'is_active', 'order', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'description')
+    ordering = ('order', 'name')
+    readonly_fields = ('created_at',)  # Solo created_at existe en Service
 
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    """
-    Configuración del admin para Blog/Novedades
-    """
-    list_display = ['title', 'is_published', 'published_date', 'created_at']
-    list_filter = ['is_published', 'published_date', 'created_at']
-    search_fields = ['title', 'content']
-    list_editable = ['is_published']
-    date_hierarchy = 'published_date'
-    ordering = ['-published_date']
-
-    fieldsets = (
-        ('Contenido', {
-            'fields': ('title', 'content', 'image')
-        }),
-        ('Publicación', {
-            'fields': ('is_published', 'published_date')
-        }),
-        ('Fechas', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-    readonly_fields = ['created_at', 'updated_at']
+    list_display = ('title', 'is_published', 'published_date', 'created_at')
+    list_filter = ('is_published', 'created_at')
+    search_fields = ('title', 'content')
+    ordering = ('-published_date', '-created_at')
+    readonly_fields = ('created_at',)  # Solo created_at existe en BlogPost
 
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
-    """
-    Configuración del admin para Mensajes de Contacto.
-    Los mensajes NO se pueden eliminar para mantener historial.
-    """
-    list_display = ['name', 'email', 'phone', 'status', 'created_at']
-    list_filter = ['status', 'created_at']
-    search_fields = ['name', 'email', 'phone', 'message']
-    list_editable = ['status']
-    date_hierarchy = 'created_at'
-    ordering = ['-created_at']
+    list_display = ('name', 'email', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('name', 'email', 'message')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at',)
 
-    fieldsets = (
-        ('Información del Cliente', {
-            'fields': ('name', 'email', 'phone')
-        }),
-        ('Mensaje', {
-            'fields': ('message',)
-        }),
-        ('Gestión', {
-            'fields': ('status', 'admin_notes')
-        }),
-        ('Fecha', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        }),
-    )
 
-    readonly_fields = ['name', 'email', 'phone', 'message', 'created_at']
-
-    def has_delete_permission(self, request, obj=None):
-        """
-        Deshabilita la opción de eliminar mensajes.
-        Mantiene el historial completo de contactos.
-        """
-        return False
-
-    def has_add_permission(self, request):
-        """
-        Deshabilita la creación manual de mensajes desde el admin.
-        Los mensajes solo se crean desde el formulario público.
-        """
-        return False
+@admin.register(Instructor)
+class InstructorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'specialties', 'is_active', 'order', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'specialties', 'bio')
+    ordering = ('order', 'name')
+    # Instructor SÍ tiene ambos campos
+    readonly_fields = ('created_at', 'updated_at')
